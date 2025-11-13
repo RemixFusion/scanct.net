@@ -1,39 +1,55 @@
-<fieldset *ngIf="categories?.length && (categories?.length || 0) >= 2" class="fieldset">
-    <div>
-        <button *ngFor="let category of categories" class="rdio-button" [ngClass]="category.status"
-            (click)="toggle(category)">
-            {{ category.label }}
-        </button>
-        <button class="rdio-button-mini all-off" (click)="avoid({ all: false })">
-            OFF
-        </button>
-        <button class="rdio-button-mini all-on" (click)="avoid({ all: true })">
-            ON
-        </button>
+<section *ngIf="categories?.length" class="category-panel">
+  <header>
+    <h2>Scan sets</h2>
+    <p>Quickly enable or pause curated collections of Connecticut talkgroups.</p>
+  </header>
+  <div class="category-actions">
+    <button
+      *ngFor="let category of categories"
+      class="rdio-button"
+      [ngClass]="category.status"
+      (click)="toggle(category)"
+    >
+      {{ category.label }}
+    </button>
+  </div>
+  <div class="category-controls">
+    <button class="rdio-button-mini" (click)="avoid({ all: false })">Disable all</button>
+    <button class="rdio-button-mini on" (click)="avoid({ all: true })">Enable all</button>
+  </div>
+</section>
+
+<mat-accordion class="systems" multi>
+  <mat-expansion-panel *ngFor="let system of systems" [expanded]="system.talkgroups.length <= 6">
+    <mat-expansion-panel-header>
+      <mat-panel-title>{{ system.label }}</mat-panel-title>
+      <mat-panel-description>
+        {{ system.talkgroups.length }} talkgroups
+      </mat-panel-description>
+    </mat-expansion-panel-header>
+
+    <div class="system-controls" *ngIf="system.talkgroups.length > 1">
+      <button class="rdio-button-mini" (click)="avoid({ system: system, status: false })">Disable all</button>
+      <button class="rdio-button-mini on" (click)="avoid({ system: system, status: true })">Enable all</button>
     </div>
-</fieldset>
-<ng-container *ngFor="let system of systems">
-    <fieldset *ngIf="system.talkgroups.length" class="fieldset">
-        <legend>
-            {{ system.label }}
-        </legend>
-        <div>
-            <button *ngFor="let talkgroup of system.talkgroups" class="rdio-button"
-                [ngClass]="{ off: !(map[system.id] && map[system.id][talkgroup.id]).active, on: map[system.id] && map[system.id][talkgroup.id].active, blink: map[system.id][talkgroup.id].minutes }"
-                (click)="avoid({ system: system, talkgroup: talkgroup })">
-                {{ talkgroup.label }}
-            </button>
-            <ng-container *ngIf="system.talkgroups.length > 1">
-                <button class="rdio-button-mini all-off" (click)="avoid({ system: system, status: false })">
-                    OFF
-                </button>
-                <button class="rdio-button-mini all-on" (click)="avoid({ system: system, status: true })">
-                    ON
-                </button>
-            </ng-container>
-        </div>
-    </fieldset>
-</ng-container>
-<ng-container *ngIf="systems?.length === 0">
-    No talkgroup configured!
-</ng-container>
+
+    <div class="talkgroup-grid">
+      <button
+        *ngFor="let talkgroup of system.talkgroups"
+        class="rdio-button"
+        [ngClass]="getTalkgroupClasses(system.id, talkgroup.id)"
+        (click)="avoid({ system: system, talkgroup: talkgroup })"
+      >
+        <span class="label">{{ talkgroup.label }}</span>
+        <span class="minutes" *ngIf="getTalkgroupState(system.id, talkgroup.id)?.minutes as minutes">
+          Snoozed · {{ minutes }}m
+        </span>
+      </button>
+    </div>
+  </mat-expansion-panel>
+</mat-accordion>
+
+<div class="empty" *ngIf="(systems?.length || 0) === 0">
+  <mat-icon>info</mat-icon>
+  <p>No talkgroups are configured for this site yet.</p>
+</div>

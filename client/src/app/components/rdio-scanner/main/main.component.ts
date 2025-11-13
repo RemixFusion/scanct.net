@@ -49,7 +49,7 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
 
     avoided = false;
 
-    branding = '';
+    branding = 'Scan CT';
 
     call: RdioScannerCall | undefined;
     callDate: Date | undefined;
@@ -345,6 +345,18 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
         }
     }
 
+    get callHeadline(): string {
+        if (this.call && this.callTalkgroupName) {
+            return this.callTalkgroupName;
+        }
+
+        if (this.callTalkgroupName && !this.callTalkgroupName.startsWith('Rdio Scanner')) {
+            return this.callTalkgroupName;
+        }
+
+        return 'Waiting for activity';
+    }
+
     showSelectPanel(): void {
         if (!this.config) {
             return;
@@ -416,7 +428,7 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
         if ('config' in event) {
             this.config = event.config;
 
-            this.branding = this.config?.branding ?? '';
+            this.branding = this.config?.branding || 'Scan CT';
 
             this.email = this.config?.email ?? '';
 

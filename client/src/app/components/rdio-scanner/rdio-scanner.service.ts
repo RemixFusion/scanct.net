@@ -83,6 +83,7 @@ export class RdioScannerService implements OnDestroy {
     private categories: RdioScannerCategory[] = [];
 
     private config: RdioScannerConfig = {
+        branding: 'Scan CT',
         dimmerDelay: false,
         groups: {},
         groupsData: [],
@@ -888,7 +889,7 @@ export class RdioScannerService implements OnDestroy {
 
                     this.config = {
                         alerts: config.alerts,
-                        branding: typeof config.branding === 'string' ? config.branding : '',
+                        branding: typeof config.branding === 'string' ? config.branding : 'Scan CT',
                         dimmerDelay: typeof config.dimmerDelay === 'number' ? config.dimmerDelay : 5000,
                         email: typeof config.email === 'string' ? config.email : '',
                         groups: typeof config.groups !== null && typeof config.groups === 'object' ? config.groups : {},
