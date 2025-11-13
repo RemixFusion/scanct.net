@@ -39,9 +39,9 @@ func NewDaemon() *Daemon {
 
 	// https://github.com/kardianos/service/issues/223
 	if runtime.GOOS == "freebsd" {
-		name = "rdioscanner"
+		name = "scanct"
 	} else {
-		name = "rdio-scanner"
+		name = "scan-ct"
 	}
 
 	p, _ := os.FindProcess(os.Getpid())
@@ -53,8 +53,8 @@ func NewDaemon() *Daemon {
 
 	d.Config = service.Config{
 		Name:        name,
-		DisplayName: "Rdio Scanner",
-		Description: "The perfect software-defined radio companion",
+		DisplayName: "Scan CT",
+		Description: "Connecticut-focused scanning service powered by Rdio Scanner",
 		Arguments:   []string{"-service", "run"},
 	}
 

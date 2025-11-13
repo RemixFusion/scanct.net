@@ -111,16 +111,67 @@ func (systems *Systems) FromMap(f []any) *Systems {
 	systems.mutex.Lock()
 	defer systems.mutex.Unlock()
 
-	systems.List = []*System{}
+	existing := map[uint]*System{}
+	for _, system := range systems.List {
+		if system != nil {
+			existing[system.Id] = system
+		}
+	}
+
+	newList := []*System{}
+	indexById := map[uint]int{}
 
 	for _, r := range f {
 		switch m := r.(type) {
 		case map[string]any:
 			system := NewSystem()
+
+			if id, ok := m["id"].(float64); ok {
+				system.Id = uint(id)
+			}
+
+			if prev, ok := existing[system.Id]; ok && prev != nil {
+				system.RowId = prev.RowId
+				if system.Order == 0 {
+					system.Order = prev.Order
+				}
+				if len(system.Label) == 0 {
+					system.Label = prev.Label
+				}
+				system.Talkgroups.List = prev.Talkgroups.List
+				system.Units.List = prev.Units.List
+			}
+
 			system.FromMap(m)
-			systems.List = append(systems.List, system)
+
+			if prev, ok := existing[system.Id]; ok && prev != nil {
+				if system.RowId == nil {
+					system.RowId = prev.RowId
+				}
+				if system.Order == 0 {
+					system.Order = prev.Order
+				}
+				if len(system.Label) == 0 {
+					system.Label = prev.Label
+				}
+			}
+
+			if system.RowId == nil {
+				if system.Id > 0 {
+					system.RowId = system.Id
+				}
+			}
+
+			if idx, ok := indexById[system.Id]; ok {
+				newList[idx] = system
+			} else {
+				indexById[system.Id] = len(newList)
+				newList = append(newList, system)
+			}
 		}
 	}
+
+	systems.List = newList
 
 	return systems
 }

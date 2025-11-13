@@ -82,16 +82,41 @@ func (units *Units) FromMap(f []any) *Units {
 	units.mutex.Lock()
 	defer units.mutex.Unlock()
 
-	units.List = []*Unit{}
+	existing := map[uint]*Unit{}
+	for _, unit := range units.List {
+		if unit != nil {
+			existing[unit.Id] = unit
+		}
+	}
+
+	newList := []*Unit{}
+	indexById := map[uint]int{}
 
 	for _, r := range f {
 		switch m := r.(type) {
 		case map[string]any:
 			unit := &Unit{}
 			unit.FromMap(m)
-			units.List = append(units.List, unit)
+
+			if prev, ok := existing[unit.Id]; ok && prev != nil {
+				if unit.Order == 0 {
+					unit.Order = prev.Order
+				}
+				if len(unit.Label) == 0 {
+					unit.Label = prev.Label
+				}
+			}
+
+			if idx, ok := indexById[unit.Id]; ok {
+				newList[idx] = unit
+			} else {
+				indexById[unit.Id] = len(newList)
+				newList = append(newList, unit)
+			}
 		}
 	}
+
+	units.List = newList
 
 	return units
 }

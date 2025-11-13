@@ -113,20 +113,20 @@ func (call *Call) ToJson() (string, error) {
 }
 
 type Calls struct {
-	mutex sync.Mutex
+	mutex sync.RWMutex
 }
 
 func NewCalls() *Calls {
 	return &Calls{
-		mutex: sync.Mutex{},
+		mutex: sync.RWMutex{},
 	}
 }
 
 func (calls *Calls) CheckDuplicate(call *Call, msTimeFrame uint, db *Database) bool {
 	var count uint
 
-	calls.mutex.Lock()
-	defer calls.mutex.Unlock()
+	calls.mutex.RLock()
+	defer calls.mutex.RUnlock()
 
 	d := time.Duration(msTimeFrame) * time.Millisecond
 	from := call.DateTime.Add(-d)
@@ -153,8 +153,8 @@ func (calls *Calls) GetCall(id uint, db *Database) (*Call, error) {
 		t           time.Time
 	)
 
-	calls.mutex.Lock()
-	defer calls.mutex.Unlock()
+	calls.mutex.RLock()
+	defer calls.mutex.RUnlock()
 
 	call := Call{Id: id}
 
@@ -224,7 +224,6 @@ func (calls *Calls) Search(searchOptions *CallsSearchOptions, client *Client) (*
 	)
 
 	var (
-		dateTime any
 		err      error
 		id       sql.NullFloat64
 		limit    uint
@@ -234,10 +233,11 @@ func (calls *Calls) Search(searchOptions *CallsSearchOptions, client *Client) (*
 		rows     *sql.Rows
 		t        time.Time
 		where    string = "true"
+		dateTime any
 	)
 
-	calls.mutex.Lock()
-	defer calls.mutex.Unlock()
+	calls.mutex.RLock()
+	defer calls.mutex.RUnlock()
 
 	db := client.Controller.Database
 
@@ -322,21 +322,61 @@ func (calls *Calls) Search(searchOptions *CallsSearchOptions, client *Client) (*
 		}
 	}
 
-	query = fmt.Sprintf("select `dateTime` from `rdioScannerCalls` where %v order by `dateTime` asc", where)
-	if err = db.Sql.QueryRow(query).Scan(&dateTime); err != nil && err != sql.ErrNoRows {
-		return nil, formatError(fmt.Errorf("%v, %v", err, query))
+	var (
+		dateTimeStart any
+		dateTimeStop  any
+		errStart      error
+		errStop       error
+		errCount      error
+		wg            sync.WaitGroup
+	)
+
+	wg.Add(3)
+
+	go func() {
+		defer wg.Done()
+		queryStart := fmt.Sprintf("select `dateTime` from `rdioScannerCalls` where %v order by `dateTime` asc", where)
+		errStart = db.Sql.QueryRow(queryStart).Scan(&dateTimeStart)
+		if errStart != nil && errStart != sql.ErrNoRows {
+			errStart = formatError(fmt.Errorf("%v, %v", errStart, queryStart))
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		queryStop := fmt.Sprintf("select `dateTime` from `rdioScannerCalls` where %v order by `dateTime` desc", where)
+		errStop = db.Sql.QueryRow(queryStop).Scan(&dateTimeStop)
+		if errStop != nil && errStop != sql.ErrNoRows {
+			errStop = formatError(fmt.Errorf("%v, %v", errStop, queryStop))
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		queryCount := fmt.Sprintf("select count(*) from `rdioScannerCalls` where %v", where)
+		errCount = db.Sql.QueryRow(queryCount).Scan(&searchResults.Count)
+		if errCount != nil && errCount != sql.ErrNoRows {
+			errCount = formatError(fmt.Errorf("%v, %v", errCount, queryCount))
+		}
+	}()
+
+	wg.Wait()
+
+	if errStart != nil {
+		return nil, errStart
+	}
+	if errStop != nil {
+		return nil, errStop
+	}
+	if errCount != nil {
+		return nil, errCount
 	}
 
-	if t, err = db.ParseDateTime(dateTime); err == nil {
+	if t, err = db.ParseDateTime(dateTimeStart); err == nil {
 		searchResults.DateStart = t
 	}
 
-	query = fmt.Sprintf("select `dateTime` from `rdioScannerCalls` where %v order by `dateTime` desc", where)
-	if err = db.Sql.QueryRow(query).Scan(&dateTime); err != nil && err != sql.ErrNoRows {
-		return nil, formatError(fmt.Errorf("%v, %v", err, query))
-	}
-
-	if t, err = db.ParseDateTime(dateTime); err == nil {
+	if t, err = db.ParseDateTime(dateTimeStop); err == nil {
 		searchResults.DateStop = t
 	} else {
 		searchResults.DateStop = time.Now()
@@ -383,11 +423,6 @@ func (calls *Calls) Search(searchOptions *CallsSearchOptions, client *Client) (*
 	switch v := searchOptions.Offset.(type) {
 	case uint:
 		offset = v
-	}
-
-	query = fmt.Sprintf("select count(*) from `rdioScannerCalls` where %v", where)
-	if err = db.Sql.QueryRow(query).Scan(&searchResults.Count); err != nil && err != sql.ErrNoRows {
-		return nil, formatError(fmt.Errorf("%v, %v", err, query))
 	}
 
 	query = fmt.Sprintf("select `id`, `DateTime`, `system`, `talkgroup` from `rdioScannerCalls` where %v order by `dateTime` %v limit %v offset %v", where, order, limit, offset)
