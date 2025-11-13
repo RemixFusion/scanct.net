@@ -5,39 +5,35 @@
 
 @include mat.core();
 
-$rdio-scanner-font-family: Roboto, "Helvetica Neue", sans-serif;
-
-$rdio-scanner-primary: mat.define-palette(mat.$grey-palette, 800, 50);
-$rdio-scanner-accent: mat.define-palette(mat.$green-palette);
-$rdio-scanner-warn: mat.define-palette(mat.$red-palette);
-$rdio-scanner-typography: mat.define-typography-config(
-	$font-family: $rdio-scanner-font-family,
+$scanct-font-family: 'Roboto', 'Inter', 'Helvetica Neue', sans-serif;
+$scanct-primary: mat.define-palette(mat.$blue-palette, 700, 300, 900);
+$scanct-accent: mat.define-palette(mat.$teal-palette, 400, 200, 700);
+$scanct-warn: mat.define-palette(mat.$red-palette, 600);
+$scanct-typography: mat.define-typography-config(
+  $font-family: $scanct-font-family,
 );
 
-$rdio-scanner-theme: mat.define-light-theme(
-	(
-		color: (
-			primary: $rdio-scanner-primary,
-			accent: $rdio-scanner-accent,
-			warn: $rdio-scanner-warn,
-		),
-	)
-);
+$scanct-theme: mat.define-dark-theme((
+  color: (
+    primary: $scanct-primary,
+    accent: $scanct-accent,
+    warn: $scanct-warn,
+  ),
+  typography: $scanct-typography,
+));
 
-@include mat.all-component-themes($rdio-scanner-theme);
-@include mat.all-component-typographies($rdio-scanner-typography);
-
-body {
-	font-family: $rdio-scanner-font-family;
-	margin: 0;
-}
-
-body,
-html {
-	height: 100%;
-}
+@include mat.all-component-themes($scanct-theme);
+@include mat.all-component-typographies($scanct-typography);
 
 html,
 body {
-	height: 100%;
+  height: 100%;
+}
+
+body {
+  background: radial-gradient(circle at top, #1d4ed8 0%, #0f172a 45%, #020617 100%);
+  color: #e2e8f0;
+  font-family: $scanct-font-family;
+  margin: 0;
+  min-height: 100%;
 }

@@ -1,122 +1,77 @@
 .rdio-button,
 .rdio-button-mini {
-  --def: rgb(45, 45, 45);
-  --green: rgb(0, 230, 118);
-  --red: rgb(255, 23, 68);
-  --yellow: rgb(255, 234, 0);
-
-  background: var(--def);
-  border-style: solid;
-  border-width: 1px;
-  border-bottom-color: rgba(0, 0, 0, 0.87);
-  border-left-color: rgba(255, 255, 255, 0.7);
-  border-right-color: rgba(0, 0, 0, 0.87);
-  border-top-color: rgba(255, 255, 255, 0.7);
-  color: rgb(255, 255, 255);
+  align-items: center;
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.85), rgba(14, 116, 144, 0.75));
+  border: none;
+  border-radius: 16px;
+  color: #f8fafc;
+  cursor: pointer;
+  display: inline-flex;
   font-family: inherit;
-  font-weight: 500;
-  height: 40px;
-  line-height: 18px;
-  margin: 2px;
-  overflow: hidden;
-  padding: 2px 8px;
+  font-weight: 600;
+  gap: 8px;
+  justify-content: center;
+  letter-spacing: 0.08em;
+  padding: 12px 20px;
   position: relative;
-  text-overflow: clip;
-  text-shadow: 0 0 4px rgb(0, 0, 0);
-  white-space: normal;
+  text-transform: uppercase;
+  transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
+  user-select: none;
 
-  &:active,
-  &:focus {
-    outline: 0;
+  &::after {
+    background: rgba(148, 163, 184, 0.35);
+    border-radius: 50%;
+    content: '';
+    height: 10px;
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: background 150ms ease, box-shadow 150ms ease;
+    width: 10px;
   }
 
   &:active {
-    top: 2px;
-    transform: scale(0.98);
-    transform-origin: bottom center;
+    transform: scale(0.97);
   }
 
-  &.off::after,
-  &.on::after,
-  &.partial::after {
-    content: "";
-    display: block;
-    height: 6px;
-    position: absolute;
-    right: 4px;
-    top: 4px;
-    width: 6px;
-
-    animation: blink 1s linear infinite both;
-  }
-
-  &.off::after {
-    background: var(--red);
-    box-shadow: 1px 1px 1px rgba(255, 255, 255, 0.7) inset, 0 0 3px 1px var(--red);
-  }
-
-  &.off.blink::after {
-    animation: blink-off 500ms linear infinite;
-  }
-
-  @keyframes blink-off {
-    0%, 50% {
-      background: var(--def);
-      box-shadow: 1px 1px 1px rgba(255, 255, 255, 0.7) inset, 0 0 0px 0px var(--def);
-    }
-
-    50%, 100% {
-      background: var(--red);
-      box-shadow: 1px 1px 1px rgba(255, 255, 255, 0.7) inset, 0 0 3px 1px var(--red);
-    }
+  &:focus-visible {
+    outline: 2px solid rgba(14, 165, 233, 0.6);
+    outline-offset: 2px;
   }
 
   &.on::after {
-    background: var(--green);
-    box-shadow: 1px 1px 1px rgba(255, 255, 255, 0.7) inset, 0 0 3px 1px var(--green);
+    background: #34d399;
+    box-shadow: 0 0 12px rgba(52, 211, 153, 0.5);
   }
 
-  &.on.blink::after {
-    animation: blink-on 500ms linear infinite;
-  }
-
-  @keyframes blink-on {
-    0%, 50% {
-      background: var(--def);
-      box-shadow: 1px 1px 1px rgba(255, 255, 255, 0.7) inset, 0 0 0px 0px var(--def);
-    }
-
-    50%, 100% {
-      background: var(--def);
-      box-shadow: 1px 1px 1px rgba(255, 255, 255, 0.7) inset, 0 0 3px 1px var(--green);
-    }
+  &.off::after {
+    background: #f87171;
+    box-shadow: 0 0 12px rgba(248, 113, 113, 0.4);
   }
 
   &.partial::after {
-    background: var(--yellow);
-    box-shadow: 1px 1px 1px rgba(255, 255, 255, 0.7) inset, 0 0 3px 1px var(--yellow);
+    background: #facc15;
+    box-shadow: 0 0 12px rgba(250, 204, 21, 0.5);
   }
 
-  &.partial.blink::after {
-    animation: blink-partial 500ms linear infinite;
-  }
-
-  @keyframes blink-partial {
-    0%, 50% {
-      background: var(--def);
-      box-shadow: 1px 1px 1px rgba(255, 255, 255, 0.7) inset, 0 0 0px 0px var(--def);
-    }
-
-    50%, 100% {
-      background: var(--yellow);
-      box-shadow: 1px 1px 1px rgba(255, 255, 255, 0.7) inset, 0 0 3px 1px var(--yellow);
-    }
+  &:hover {
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.35);
   }
 }
 
 .rdio-button {
-  color: rgb(250, 250, 250);
-  font-size: 12px;
-  min-width: 80px;
-  text-transform: uppercase;
+  font-size: 0.75rem;
+  min-height: 52px;
+  min-width: 120px;
+}
+
+.rdio-button-mini {
+  font-size: 0.65rem;
+  min-height: 42px;
+  padding: 10px 16px;
+}
+
+.rdio-button-mini::after {
+  right: 10px;
 }

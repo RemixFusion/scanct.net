@@ -44,18 +44,20 @@ import { RdioScannerSupportComponent } from './support/support.component';
     templateUrl: './main.component.html',
 })
 export class RdioScannerMainComponent implements OnDestroy, OnInit {
+    private readonly historySize = 12;
+
     auth = false;
     authForm: FormGroup;
 
     avoided = false;
 
-    branding = '';
+    branding = 'Scan CT';
 
     call: RdioScannerCall | undefined;
     callDate: Date | undefined;
     callError = '0';
     callFrequency: string = this.formatFrequency(0);
-    callHistory: RdioScannerCall[] = new Array<RdioScannerCall>(5);
+    callHistory: RdioScannerCall[] = [];
     callPrevious: RdioScannerCall | undefined;
     callProgress = new Date(0, 0, 0, 0, 0, 0);
     callQueue = 0;
@@ -74,13 +76,13 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
     //
     // Be respectful, sponsor the project, use native apps when possible.
     //
-    callTalkgroupName = `Rdio Scanner v${packageInfo.version}`;
+    callTalkgroupName = `Scan CT · Powered by Rdio Scanner v${packageInfo.version}`;
     //
     // END OF RED TAPE.
     //
 
     callTime = 0;
-    callUnit = '0';
+    callUnit = '—';
 
     clock = new Date();
 
@@ -120,6 +122,18 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
 
     get showListenersCount(): boolean {
         return this.config?.showListenersCount || false;
+    }
+
+    get hasHistory(): boolean {
+        return this.callHistory.length > 0;
+    }
+
+    get liveStatusLabel(): string {
+        if (this.playbackMode) {
+            return 'Playback';
+        }
+
+        return this.livefeedOnline ? 'Live' : 'Standby';
     }
 
     @Output() openSearchPanel = new EventEmitter<void>();
@@ -305,12 +319,12 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
                 });
 
                 if (this.call && !this.replayOffset) {
-                    this.rdioScannerService.replay()
+                    this.rdioScannerService.replay();
                 } else if (this.callPrevious !== this.callHistory[0]) {
                     if (this.replayOffset) {
                         this.rdioScannerService.play(this.callHistory[this.replayOffset - 1]);
                     } else {
-                        this.rdioScannerService.replay()
+                        this.rdioScannerService.replay();
                     }
                 } else if (this.replayOffset < this.callHistory.length) {
                     this.rdioScannerService.play(this.callHistory[this.replayOffset]);
@@ -377,6 +391,10 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
         this.rdioScannerService.stop();
     }
 
+    trackCall(_index: number, previousCall: RdioScannerCall | undefined): number | undefined {
+        return previousCall?.id;
+    }
+
     private eventHandler(event: RdioScannerEvent): void {
         if ('auth' in event && event.auth) {
             const password = this.rdioScannerService.readPin();
@@ -416,7 +434,7 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
         if ('config' in event) {
             this.config = event.config;
 
-            this.branding = this.config?.branding ?? '';
+            this.branding = this.config?.branding?.trim() || 'Scan CT';
 
             this.email = this.config?.email ?? '';
 
@@ -517,39 +535,51 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
             if (group?.led) color = group.led;
 
         } else if (call?.tagData?.led) {
-            color = call.tagData?.led
+            color = call.tagData?.led;
 
         } else if (call?.systemData?.led) {
-            color = call?.systemData.led;
-
-        } else if (call?.talkgroupData?.led) {
-            color = call.talkgroupData.led;
+            color = call.systemData?.led;
         }
 
-        return color && colors.includes(color) ? color : 'green';
+        if (typeof color === 'string' && colors.includes(color)) {
+            return color;
+        }
+
+        return '';
     }
 
-    private isAfsSystem(call: RdioScannerCall): boolean {
-        return (call.systemData?.type == 'provoice' ?? false) || (call.talkgroupData?.type === 'provoice' ?? false);
+    private isAfsSystem(call: RdioScannerCall | undefined): boolean {
+        if (!call) {
+            return false;
+        }
+
+        return call.systemData?.type === 'afs' || call.talkgroupData?.type === 'afs';
     }
 
     private syncClock(): void {
-        this.clockTimer?.unsubscribe();
+        this.clockTimer = timer(0, 1000).subscribe(() => {
+            this.clock = new Date();
 
-        this.clock = new Date();
-
-        this.clockTimer = timer(1000 * (60 - this.clock.getSeconds())).subscribe(() => this.syncClock());
+            this.ngChangeDetectorRef.detectChanges();
+        });
     }
 
     private updateDimmer(): void {
-        if (typeof this.config?.dimmerDelay === 'number') {
-            this.dimmerTimer?.unsubscribe();
+        if (!this.config?.dimmerDelay) {
+            this.dimmer = false;
 
+            return;
+        }
+
+        if (this.dimmerTimer instanceof Subscription) {
+            this.dimmerTimer.unsubscribe();
+        }
+
+        if (this.callTime >= this.config.dimmerDelay) {
             this.dimmer = true;
 
-            this.dimmerTimer = timer(this.config.dimmerDelay).subscribe(() => {
-                this.dimmerTimer?.unsubscribe();
-
+        } else {
+            this.dimmerTimer = timer(this.config.dimmerDelay - this.callTime).subscribe(() => {
                 this.dimmerTimer = undefined;
 
                 this.dimmer = false;
@@ -578,7 +608,7 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
 
             this.callTalkgroup = this.call.talkgroupData?.label || `${isAfs ? this.formatAfs(this.call.talkgroup) : this.call.talkgroup}`;
 
-            this.callTalkgroupName = this.call.talkgroupData?.name || this.formatFrequency(this.call?.frequency);
+            this.callTalkgroupName = this.call.talkgroupData?.name || this.formatFrequency(this.call?.frequency) || this.callTalkgroupName;
 
             if (Array.isArray(this.call.frequencies) && this.call.frequencies.length) {
                 const frequency = this.call.frequencies.reduce((p, v) => (v.pos || 0) <= time ? v : p, {});
@@ -614,8 +644,6 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
                             return u.id === source.src;
                         })?.label ?? `${source.src}`;
 
-                        console.log('here', this.callUnit);
-
                     } else {
                         this.callUnit = `${source.src}`;
                     }
@@ -624,7 +652,7 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
             } else {
                 this.callTalkgroupId = isAfs ? this.formatAfs(this.call.talkgroup) : this.call.talkgroup.toString();
 
-                this.callUnit = this.call.systemData?.units?.find((u) => u.id === this.call?.source)?.label ?? `${this.call.source ?? ''}`;
+                this.callUnit = this.call.systemData?.units?.find((u) => u.id === this.call?.source)?.label ?? `${this.call.source ?? '—'}`;
             }
 
             if (
@@ -632,13 +660,19 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
                 this.callPrevious.id !== this.call.id &&
                 !this.callHistory.find((call: RdioScannerCall) => call?.id === this.callPrevious?.id)
             ) {
-                this.callHistory.pop();
-
                 this.callHistory.unshift(this.callPrevious);
+
+                if (this.callHistory.length > this.historySize) {
+                    this.callHistory = this.callHistory.slice(0, this.historySize);
+                }
             }
         }
 
         const call = this.call || this.callPrevious;
+
+        if (!call) {
+            this.callUnit = '—';
+        }
 
         if (call) {
             this.delayed = call.delayed;
@@ -647,10 +681,8 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
 
             if (call.talkgroupData?.type)
                 this.type = call.talkgroupData.type;
-
             else if (call.systemData?.type)
                 this.type = call.systemData.type;
-
             if (this.rdioScannerService.isPatched(call)) {
                 this.avoided = false;
                 this.patched = true;

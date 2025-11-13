@@ -53,8 +53,8 @@ func NewDaemon() *Daemon {
 
 	d.Config = service.Config{
 		Name:        name,
-		DisplayName: "Rdio Scanner",
-		Description: "The perfect software-defined radio companion",
+		DisplayName: "Scan CT",
+		Description: "Scan CT – the Connecticut-focused Trunk Recorder companion",
 		Arguments:   []string{"-service", "run"},
 	}
 

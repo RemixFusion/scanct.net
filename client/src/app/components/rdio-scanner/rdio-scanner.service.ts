@@ -32,12 +32,16 @@ import {
     RdioScannerCategoryType,
     RdioScannerConfig,
     RdioScannerEvent,
+    RdioScannerGroupData,
     RdioScannerLivefeed,
     RdioScannerLivefeedMap,
     RdioScannerLivefeedMode,
     RdioScannerOscillatorData,
     RdioScannerPlaybackList,
     RdioScannerSearchOptions,
+    RdioScannerSystem,
+    RdioScannerTagData,
+    RdioScannerTalkgroup,
 } from './rdio-scanner';
 
 declare global {
@@ -95,6 +99,14 @@ export class RdioScannerService implements OnDestroy {
         time12hFormat: false,
     };
 
+    private groupLookup = new Map<string, RdioScannerGroupData>();
+
+    private systemLookup = new Map<number, RdioScannerSystem>();
+
+    private tagLookup = new Map<string, RdioScannerTagData>();
+
+    private talkgroupLookup = new Map<string, RdioScannerTalkgroup>();
+
     private instanceId = 'default';
 
     private livefeedMap = {} as RdioScannerLivefeedMap;
@@ -133,6 +145,8 @@ export class RdioScannerService implements OnDestroy {
         this.initializeInstanceId();
 
         this.readLivefeedMap();
+
+        this.rebuildConfigLookups();
 
         this.openWebsocket();
     }
@@ -904,6 +918,8 @@ export class RdioScannerService implements OnDestroy {
 
                     this.rebuildLivefeedMap();
 
+                    this.rebuildConfigLookups();
+
                     if (this.livefeedMode === RdioScannerLivefeedMode.Online) {
                         this.startLivefeed();
                     }
@@ -978,6 +994,123 @@ export class RdioScannerService implements OnDestroy {
                     break;
                 }
             }
+        }
+    }
+
+    private getGroup(label: string | undefined): RdioScannerGroupData | undefined {
+        if (!label) {
+            return undefined;
+        }
+
+        if (!this.groupLookup.has(label) && Array.isArray(this.config.groupsData)) {
+            const group = this.config.groupsData.find((g) => g.label === label);
+
+            if (group) {
+                this.groupLookup.set(label, group);
+            }
+        }
+
+        return this.groupLookup.get(label);
+    }
+
+    private getSystemById(id: number | undefined): RdioScannerSystem | undefined {
+        if (typeof id !== 'number') {
+            return undefined;
+        }
+
+        if (!this.systemLookup.has(id) && Array.isArray(this.config.systems)) {
+            const system = this.config.systems.find((s) => s.id === id);
+
+            if (system) {
+                this.systemLookup.set(id, system);
+            }
+        }
+
+        return this.systemLookup.get(id);
+    }
+
+    private getTag(label: string | undefined): RdioScannerTagData | undefined {
+        if (!label) {
+            return undefined;
+        }
+
+        if (!this.tagLookup.has(label) && Array.isArray(this.config.tagsData)) {
+            const tag = this.config.tagsData.find((t) => t.label === label);
+
+            if (tag) {
+                this.tagLookup.set(label, tag);
+            }
+        }
+
+        return this.tagLookup.get(label);
+    }
+
+    private getTalkgroupKey(systemId: number | undefined, talkgroupId: number | undefined): string | undefined {
+        if (typeof systemId !== 'number' || typeof talkgroupId !== 'number') {
+            return undefined;
+        }
+
+        return `${systemId}:${talkgroupId}`;
+    }
+
+    private getTalkgroup(systemId: number | undefined, talkgroupId: number | undefined): RdioScannerTalkgroup | undefined {
+        const key = this.getTalkgroupKey(systemId, talkgroupId);
+
+        if (!key) {
+            return undefined;
+        }
+
+        if (!this.talkgroupLookup.has(key)) {
+            const system = this.getSystemById(systemId);
+
+            if (system?.talkgroups) {
+                const talkgroup = system.talkgroups.find((tg) => tg.id === talkgroupId);
+
+                if (talkgroup) {
+                    this.talkgroupLookup.set(key, talkgroup);
+                }
+            }
+        }
+
+        return this.talkgroupLookup.get(key);
+    }
+
+    private rebuildConfigLookups(): void {
+        this.systemLookup.clear();
+        this.talkgroupLookup.clear();
+        this.groupLookup.clear();
+        this.tagLookup.clear();
+
+        if (Array.isArray(this.config.systems)) {
+            this.config.systems.forEach((system) => {
+                this.systemLookup.set(system.id, system);
+
+                if (Array.isArray(system.talkgroups)) {
+                    system.talkgroups.forEach((talkgroup) => {
+                        const key = this.getTalkgroupKey(system.id, talkgroup.id);
+
+                        if (key) {
+                            this.talkgroupLookup.set(key, talkgroup);
+                        }
+                    });
+                }
+            });
+        }
+
+        if (Array.isArray(this.config.groupsData)) {
+            this.config.groupsData.forEach((group) => {
+                if (group.label) {
+                    this.groupLookup.set(group.label, group);
+                }
+            });
+        }
+
+        if (Array.isArray(this.config.tagsData)) {
+            this.config.tagsData.forEach((tag) => {
+                if (tag.label) {
+                    this.tagLookup.set(tag.label, tag);
+                }
+            });
         }
     }
 
@@ -1225,21 +1358,37 @@ export class RdioScannerService implements OnDestroy {
 
 
     private transformCall(call: RdioScannerCall): RdioScannerCall {
-        if (call && Array.isArray(this.config?.systems)) {
-            call.systemData = this.config.systems.find((system) => system.id === call.system);
-
-            if (Array.isArray(call.systemData?.talkgroups)) {
-                call.talkgroupData = call.systemData?.talkgroups.find((talkgroup) => talkgroup.id === call.talkgroup);
-            }
-
-            if (call.talkgroupData?.frequency) {
-                call.frequency = call.talkgroupData.frequency;
-            }
-
-            call.groupsData = this.config.groupsData.filter((gd) => call.talkgroupData?.groups.some((l) => l === gd.label));
-
-            call.tagData = this.config.tagsData.find((td) => td.label === call.talkgroupData?.tag);
+        if (!call) {
+            return call;
         }
+
+        const system = this.getSystemById(call.system);
+
+        if (system) {
+            call.systemData = system;
+        }
+
+        const talkgroup = this.getTalkgroup(call.system, call.talkgroup);
+
+        if (talkgroup) {
+            call.talkgroupData = talkgroup;
+
+            if (typeof talkgroup.frequency === 'number') {
+                call.frequency = talkgroup.frequency;
+            }
+        }
+
+        const groups = call.talkgroupData?.groups;
+
+        if (Array.isArray(groups)) {
+            call.groupsData = groups
+                .map((label) => this.getGroup(label))
+                .filter((group): group is RdioScannerGroupData => !!group);
+        } else {
+            call.groupsData = [];
+        }
+
+        call.tagData = this.getTag(call.talkgroupData?.tag);
 
         return call;
     }

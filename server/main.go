@@ -47,8 +47,8 @@ func main() {
 	config := NewConfig()
 
 	if config.newAdminPassword == "" {
-		fmt.Printf("\nRdio Scanner v%s\n", Version)
-		fmt.Printf("----------------------------------\n")
+		fmt.Printf("\nScan CT v%s\n", Version)
+		fmt.Printf("------------------------------\n")
 	}
 
 	controller := NewController(config)
