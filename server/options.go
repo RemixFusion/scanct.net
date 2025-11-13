@@ -61,27 +61,29 @@ func NewOptions() *Options {
 }
 
 func (options *Options) FromMap(m map[string]any) *Options {
-	options.mutex.Lock()
-	defer options.mutex.Unlock()
+        options.mutex.Lock()
+        defer options.mutex.Unlock()
 
-	switch v := m["audioConversion"].(type) {
-	case float64:
-		options.AudioConversion = uint(v)
+        options.Branding = defaults.options.branding
+
+        switch v := m["audioConversion"].(type) {
+        case float64:
+                options.AudioConversion = uint(v)
 	default:
 		options.MaxClients = defaults.options.audioConversion
 	}
 
-	switch v := m["autoPopulate"].(type) {
-	case bool:
-		options.AutoPopulate = v
-	default:
-		options.AutoPopulate = defaults.options.autoPopulate
-	}
+        switch v := m["autoPopulate"].(type) {
+        case bool:
+                options.AutoPopulate = v
+        default:
+                options.AutoPopulate = defaults.options.autoPopulate
+        }
 
-	switch v := m["branding"].(type) {
-	case string:
-		options.Branding = v
-	}
+        switch v := m["branding"].(type) {
+        case string:
+                options.Branding = v
+        }
 
 	switch v := m["dimmerDelay"].(type) {
 	case float64:
@@ -185,11 +187,12 @@ func (options *Options) Read(db *Database) error {
 
 	defaultPassword, _ = bcrypt.GenerateFromPassword([]byte(defaults.adminPassword), bcrypt.DefaultCost)
 
-	options.adminPassword = string(defaultPassword)
-	options.adminPasswordNeedChange = defaults.adminPasswordNeedChange
-	options.AudioConversion = defaults.options.audioConversion
-	options.AutoPopulate = defaults.options.autoPopulate
-	options.DimmerDelay = defaults.options.dimmerDelay
+        options.adminPassword = string(defaultPassword)
+        options.adminPasswordNeedChange = defaults.adminPasswordNeedChange
+        options.AudioConversion = defaults.options.audioConversion
+        options.AutoPopulate = defaults.options.autoPopulate
+        options.Branding = defaults.options.branding
+        options.DimmerDelay = defaults.options.dimmerDelay
 	options.DisableDuplicateDetection = defaults.options.disableDuplicateDetection
 	options.DuplicateDetectionTimeFrame = defaults.options.duplicateDetectionTimeFrame
 	options.KeypadBeeps = defaults.options.keypadBeeps

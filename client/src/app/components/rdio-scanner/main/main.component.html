@@ -1,177 +1,160 @@
-<div class="rdio-status">
-    <div class="branding">{{ branding }}</div>
-    <div class="led" [ngClass]="ledStyle"></div>
+<div class="scanct-shell">
+    <header class="scanct-header mat-elevation-z4">
+        <div class="brand">
+            <h1>Scan CT</h1>
+            <p *ngIf="branding">{{ branding }}</p>
+        </div>
+        <div class="status">
+            <div class="status-chip" [ngClass]="{ online: livefeedOnline, playback: playbackMode && !livefeedOnline, offline: !livefeedOnline && !playbackMode }">
+                <span class="status-indicator" [ngClass]="ledStyle"></span>
+                <span>{{ livefeedOnline ? 'Live feed' : playbackMode ? 'Playback' : 'Offline' }}</span>
+            </div>
+            <div class="status-meta">
+                <mat-icon>schedule</mat-icon>
+                <span>{{ clock | date:timeFormat }}</span>
+            </div>
+            <div class="status-meta" *ngIf="showListenersCount">
+                <mat-icon>headset</mat-icon>
+                <span>{{ listeners }}</span>
+            </div>
+            <div class="status-meta">
+                <mat-icon>queue_music</mat-icon>
+                <span>{{ callQueue }}</span>
+            </div>
+        </div>
+    </header>
+
+    <section class="scanct-content">
+        <mat-card class="call-card" [class.dimmed]="!dimmer" (dblclick)="toggleFullscreen.emit()">
+            <div class="call-card__header">
+                <div class="call-card__system">
+                    <span class="system-name">{{ callSystem }}</span>
+                    <span class="system-tag" *ngIf="callTag">{{ callTag }}</span>
+                    <span class="system-type" *ngIf="type">{{ type | titlecase }}</span>
+                </div>
+                <div class="call-card__time">
+                    <span *ngIf="callDate">{{ callDate | date:'MMM d' }}</span>
+                    <span>{{ callProgress | date:timeFormat }}</span>
+                </div>
+            </div>
+            <div class="call-card__title">{{ callTalkgroup }}</div>
+            <div class="call-card__subtitle">{{ callTalkgroupName }}</div>
+            <div class="call-card__metrics">
+                <div>
+                    <mat-icon>radio</mat-icon>
+                    <span>{{ callFrequency || '0.0000 MHz' }}</span>
+                </div>
+                <div>
+                    <mat-icon>sell</mat-icon>
+                    <span>{{ callTalkgroupId || '0' }}</span>
+                </div>
+                <div>
+                    <mat-icon>badge</mat-icon>
+                    <span>{{ callUnit || '—' }}</span>
+                </div>
+            </div>
+            <div class="call-card__signal">
+                <div>
+                    <mat-icon>insights</mat-icon>
+                    <span>E {{ callError || 0 }}</span>
+                </div>
+                <div>
+                    <mat-icon>graphic_eq</mat-icon>
+                    <span>S {{ callSpike || 0 }}</span>
+                </div>
+            </div>
+            <div class="call-card__flags">
+                <span class="flag" [class.active]="avoided">Avoid</span>
+                <span class="flag" [class.active]="patched">Patch</span>
+                <span class="flag" [class.active]="delayed">Delayed</span>
+                <span class="flag" *ngIf="tempAvoid" [class.active]="true">Hold {{ tempAvoid }}m</span>
+            </div>
+            <div class="call-card__auth" *ngIf="auth">
+                <form autocomplete="off" [formGroup]="authForm" (ngSubmit)="authenticate()">
+                    <mat-form-field appearance="fill">
+                        <mat-label>Unlock code</mat-label>
+                        <input #password matInput type="password" autocomplete="off" formControlName="password" (blur)="authFocus()">
+                        <mat-error *ngIf="authForm.get('password')?.hasError('expired')">
+                            This unlock code has expired
+                        </mat-error>
+                        <mat-error *ngIf="authForm.get('password')?.hasError('tooMany')">
+                            Too many connections
+                        </mat-error>
+                    </mat-form-field>
+                </form>
+            </div>
+        </mat-card>
+
+        <mat-card class="history-card">
+            <mat-card-header>
+                <mat-card-title>Recent activity</mat-card-title>
+                <mat-card-subtitle>Latest calls from Trunk Recorder</mat-card-subtitle>
+            </mat-card-header>
+            <mat-divider></mat-divider>
+            <mat-card-content>
+                <mat-list>
+                    <mat-list-item *ngFor="let previousCall of callHistory; trackBy: trackByCall" [class.replaying]="previousCall?.id && previousCall?.id === call?.id">
+                        <mat-icon matListItemIcon>history</mat-icon>
+                        <div matListItemLine>{{ previousCall?.talkgroupData?.label || previousCall?.talkgroup }}</div>
+                        <div matListItemLine>{{ previousCall?.systemData?.label || previousCall?.system }}</div>
+                        <div matListItemLine class="call-meta">
+                            <span>{{ previousCall?.dateTime | date:timeFormat }}</span>
+                            <span>{{ previousCall?.talkgroupData?.name || previousCall?.frequency }}</span>
+                        </div>
+                    </mat-list-item>
+                </mat-list>
+            </mat-card-content>
+        </mat-card>
+
+        <mat-card class="control-card">
+            <mat-card-header>
+                <mat-card-title>Controls</mat-card-title>
+                <mat-card-subtitle>Manage the live feed and playback</mat-card-subtitle>
+            </mat-card-header>
+            <div class="control-card__grid">
+                <button mat-raised-button color="primary" class="state-button" (click)="livefeed()" [ngClass]="{ active: livefeedOnline, standby: playbackMode && !livefeedOnline }">
+                    <mat-icon>podcasts</mat-icon>
+                    <span>Live feed</span>
+                </button>
+                <button mat-raised-button class="state-button" (click)="holdSystem()" [ngClass]="{ active: holdSys }">
+                    <mat-icon>hub</mat-icon>
+                    <span>Hold system</span>
+                </button>
+                <button mat-raised-button class="state-button" (click)="holdTalkgroup()" [ngClass]="{ active: holdTg }">
+                    <mat-icon>speaker_group</mat-icon>
+                    <span>Hold talkgroup</span>
+                </button>
+                <button mat-raised-button class="state-button" (click)="replay()">
+                    <mat-icon>replay</mat-icon>
+                    <span>Replay last</span>
+                </button>
+                <button mat-raised-button class="state-button" (click)="skip()">
+                    <mat-icon>skip_next</mat-icon>
+                    <span>Skip next</span>
+                </button>
+                <button mat-raised-button class="state-button" (click)="avoid()">
+                    <mat-icon>block</mat-icon>
+                    <span>Avoid</span>
+                </button>
+                <button mat-raised-button class="state-button" (click)="showSearchPanel()">
+                    <mat-icon>search</mat-icon>
+                    <span>Search calls</span>
+                </button>
+                <button mat-raised-button class="state-button" (click)="pause()" [ngClass]="{ active: livefeedPaused }">
+                    <mat-icon>pause_circle</mat-icon>
+                    <span>Pause</span>
+                </button>
+                <button mat-raised-button class="state-button" (click)="showSelectPanel()">
+                    <mat-icon>playlist_add</mat-icon>
+                    <span>Select talkgroups</span>
+                </button>
+            </div>
+        </mat-card>
+    </section>
 </div>
-<div class="rdio-display" [ngClass]="{ idle: !dimmer }" (dblclick)="toggleFullscreen.emit()">
-    <div class="row three">
-        <div>
-            <span>{{ clock | date:timeFormat }}</span>
-        </div>
-        <div>
-            <span *ngIf="!linked">NO LINK</span>
-            <span *ngIf="linked && showListenersCount">L: {{ listeners }}</span>
-        </div>
-        <div>
-            <span>Q: {{ callQueue }}</span>
-        </div>
-    </div>
-    <div class="row small"></div>
-    <div class="row">
-        <div>
-            <span>{{ callSystem }}</span>
-        </div>
-        <div>
-            <span>{{ type | uppercase }}</span>
-        </div>
-        <div>
-            <span>{{ callTag }}</span>
-        </div>
-    </div>
-    <div class="row">
-        <div>
-            <span>{{ callTalkgroup }}</span>
-        </div>
-        <div></div>
-        <div>
-            <span>{{ callDate | date:'MM/dd' }} </span>
-            <span>{{ callProgress | date:timeFormat }}</span>
-        </div>
-    </div>
-    <div class="row big full">
-        <span>{{ callTalkgroupName }}</span>
-    </div>
-    <div class="row">
-        <div>
-            <span>F: {{ callFrequency || 0 }}</span>
-        </div>
-        <div></div>
-        <div>
-            <span>TGID: {{ callTalkgroupId || 0 }}</span>
-        </div>
-    </div>
-    <div class="row">
-        <div>
-            <span>E: {{ callError || 0 }} S: {{ callSpike || 0 }} </span>
-        </div>
-        <div></div>
-        <div>
-            <span *ngIf="callUnit">UID: {{ callUnit }}</span>
-        </div>
-    </div>
-    <div class="row right small">
-        <div></div>
-        <div></div>
-        <div>
-            <div *ngIf="tempAvoid">
-                <span class="flag" [ngClass]="{ flaged: avoided || patched }">&#x23f2;&#xFE0E; {{ tempAvoid }}M</span>
-            </div>
-            <div>
-                <span class="flag" [ngClass]="{ flaged: avoided }">AVOID</span>
-            </div>
-            <div>
-                <span class="flag" [ngClass]="{ flaged: patched }">PATCH</span>
-            </div>
-            <div>
-                <span class="flag" [ngClass]="{ flaged: delayed }">DELAYED</span>
-            </div>
-        </div>
-    </div>
-    <div class="wrapper">
-        <div class="auth" [ngClass]="{ visible: auth }">
-            <form class="mat-elevation-z8" autocomplete="off" [formGroup]="authForm" (ngSubmit)="authenticate()">
-                <mat-form-field>
-                    <input #password matInput type="password" autocomplete="off" formControlName="password"
-                        placeholder="Unlock code" (blur)="authFocus()">
-                    <mat-error *ngIf="authForm.get('password')?.hasError('expired')">
-                        This unlock code has expired
-                    </mat-error>
-                    <mat-error *ngIf="authForm.get('password')?.hasError('tooMany')">
-                        Too many connections
-                    </mat-error>
-                </mat-form-field>
-            </form>
-        </div>
-        <table class="history">
-            <thead>
-                <tr>
-                    <th>
-                        <span>Time</span>
-                    </th>
-                    <th>
-                        <span>System</span>
-                    </th>
-                    <th>
-                        <span>Talkgroup</span>
-                    </th>
-                    <th>
-                        <span>Name</span>
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let previousCall of callHistory"
-                    [ngClass]="{ 'replaying': previousCall?.id !== null && previousCall?.id === call?.id} ">
-                    <td>
-                        <span>{{ previousCall?.dateTime | date:timeFormat }}</span>
-                    </td>
-                    <td>
-                        <span>{{ previousCall?.systemData?.label || previousCall?.system}}</span>
-                    </td>
-                    <td>
-                        <span>{{ previousCall?.talkgroupData?.label || previousCall?.talkgroup }}</span>
-                    </td>
-                    <td>
-                        <span>{{ previousCall?.talkgroupData?.name || previousCall?.frequency }}</span>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-<div class="rdio-control">
-    <div class="row">
-        <button class="rdio-button" (click)="livefeed()"
-            [ngClass]="{ off: livefeedOffline && !playbackMode, on: livefeedOnline, partial: playbackMode }">
-            LIVE<br>FEED
-        </button>
-        <div class="spacer"></div>
-        <button class="rdio-button" (click)="holdSystem()" [ngClass]="{ off: !holdSys, on: holdSys }">
-            HOLD<br>SYS
-        </button>
-        <div class="spacer"></div>
-        <button class="rdio-button" (click)="holdTalkgroup()" [ngClass]="{ off: !holdTg, on: holdTg }">
-            HOLD<br>TG
-        </button>
-    </div>
-    <div class="row">
-        <button class="rdio-button" (click)="replay()">
-            REPLAY<br>LAST
-        </button>
-        <div class="spacer"></div>
-        <button class="rdio-button" (click)="skip()">
-            SKIP<br>NEXT
-        </button>
-        <div class="spacer"></div>
-        <button class="rdio-button" (click)="avoid()">
-            AVOID
-        </button>
-    </div>
-    <div class="row">
-        <button class="rdio-button" (click)="showSearchPanel()">
-            SEARCH<br>CALL
-        </button>
-        <div class="spacer"></div>
-        <button class="rdio-button" (click)="pause()" [ngClass]="{ off: !livefeedPaused, on: livefeedPaused }">
-            PAUSE
-        </button>
-        <div class="spacer"></div>
-        <button class="rdio-button" (click)="showSelectPanel()">
-            SELECT<br>TG
-        </button>
-    </div>
-</div>
-<div class="rdio-help" *ngIf="email">
-    <button mat-icon-button (click)="showHelp()">
+
+<div class="scanct-help" *ngIf="email">
+    <button mat-mini-fab color="primary" (click)="showHelp()">
         <mat-icon>help_center</mat-icon>
     </button>
 </div>

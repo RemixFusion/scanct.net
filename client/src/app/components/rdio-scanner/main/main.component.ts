@@ -74,7 +74,7 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
     //
     // Be respectful, sponsor the project, use native apps when possible.
     //
-    callTalkgroupName = `Rdio Scanner v${packageInfo.version}`;
+    callTalkgroupName = `Scan CT v${packageInfo.version}`;
     //
     // END OF RED TAPE.
     //
@@ -377,6 +377,10 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
         this.rdioScannerService.stop();
     }
 
+    trackByCall(_index: number, call: RdioScannerCall | undefined): number | undefined {
+        return call?.id;
+    }
+
     private eventHandler(event: RdioScannerEvent): void {
         if ('auth' in event && event.auth) {
             const password = this.rdioScannerService.readPin();
@@ -416,7 +420,7 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
         if ('config' in event) {
             this.config = event.config;
 
-            this.branding = this.config?.branding ?? '';
+            this.branding = this.config?.branding || 'Scan CT';
 
             this.email = this.config?.email ?? '';
 
@@ -613,8 +617,6 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
 
                             return u.id === source.src;
                         })?.label ?? `${source.src}`;
-
-                        console.log('here', this.callUnit);
 
                     } else {
                         this.callUnit = `${source.src}`;

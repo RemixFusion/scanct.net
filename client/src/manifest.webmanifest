@@ -1,8 +1,8 @@
 {
-  "name": "Rdio Scanner",
-  "short_name": "Rdio Scanner",
-  "theme_color": "#1e1e1e",
-  "background_color": "#1e1e1e",
+  "name": "Scan CT",
+  "short_name": "Scan CT",
+  "theme_color": "#0b1f33",
+  "background_color": "#0b1f33",
   "display": "standalone",
   "orientation": "portrait",
   "scope": "./",

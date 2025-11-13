@@ -348,13 +348,15 @@ func (calls *Calls) Search(searchOptions *CallsSearchOptions, client *Client) (*
 		err  error
 		rows *sql.Rows
 
-		limit  uint
-		offset uint
-		order  string
-		query  string
-		where  string = `c."systemId" > 0 AND c."talkgroupId" > 0 AND s."systemRef" IS NOT NULL AND t."talkgroupRef" IS NOT NULL AND d."callId" IS NULL`
+                limit       uint
+                offset      uint
+                order       string
+                query       string
+                where       string = `c."systemId" > 0 AND c."talkgroupId" > 0 AND s."systemRef" IS NOT NULL AND t."talkgroupRef" IS NOT NULL AND d."callId" IS NULL`
 
-		timestamp int64
+                timestamp    int64
+                timestampMax sql.NullInt64
+                timestampMin sql.NullInt64
 	)
 
 	calls.mutex.Lock()
@@ -433,19 +435,18 @@ func (calls *Calls) Search(searchOptions *CallsSearchOptions, client *Client) (*
 		}
 	}
 
-	query = fmt.Sprintf(`SELECT c."timestamp" FROM "calls" AS c LEFT JOIN "systems" AS s ON s."systemId" = c."systemId" LEFT JOIN "talkgroups" AS t ON t."talkgroupId" = c."talkgroupId" LEFT JOIN "delayed" AS d ON d."callId" = c."callId" WHERE %s ORDER BY c."timestamp" ASC`, where)
-	if err = db.Sql.QueryRow(query).Scan(&timestamp); err != nil && err != sql.ErrNoRows {
-		return nil, formatError(err, query)
-	}
+        query = fmt.Sprintf(`SELECT MIN(c."timestamp"), MAX(c."timestamp") FROM "calls" AS c LEFT JOIN "systems" AS s ON s."systemId" = c."systemId" LEFT JOIN "talkgroups" AS t ON t."talkgroupId" = c."talkgroupId" LEFT JOIN "delayed" AS d ON d."callId" = c."callId" WHERE %s`, where)
+        if err = db.Sql.QueryRow(query).Scan(&timestampMin, &timestampMax); err != nil && err != sql.ErrNoRows {
+                return nil, formatError(err, query)
+        }
 
-	searchResults.DateStart = time.UnixMilli(timestamp)
+        if timestampMin.Valid {
+                searchResults.DateStart = time.UnixMilli(timestampMin.Int64)
+        }
 
-	query = fmt.Sprintf(`SELECT c."timestamp" FROM "calls" AS c LEFT JOIN "systems" AS s ON s."systemId" = c."systemId" LEFT JOIN "talkgroups" AS t ON t."talkgroupId" = c."talkgroupId" LEFT JOIN "delayed" AS d ON d."callId" = c."callId" WHERE %s ORDER BY c."timestamp" DESC`, where)
-	if err = db.Sql.QueryRow(query).Scan(&timestamp); err != nil && err != sql.ErrNoRows {
-		return nil, formatError(err, query)
-	}
-
-	searchResults.DateStop = time.UnixMilli(timestamp)
+        if timestampMax.Valid {
+                searchResults.DateStop = time.UnixMilli(timestampMax.Int64)
+        }
 
 	switch v := searchOptions.Sort.(type) {
 	case int:

@@ -82,7 +82,7 @@ var MysqlSchema = []string{
     FOREIGN KEY ("systemId") REFERENCES "systems" ("systemId") ON DELETE CASCADE ON UPDATE CASCADE
   );`,
 
-	`CREATE TABLE IF NOT EXISTS "talkgroups" (
+        `CREATE TABLE IF NOT EXISTS "talkgroups" (
     "talkgroupId" bigint NOT NULL AUTO_INCREMENT PRIMARY KEY,
     "alert" text NOT NULL DEFAULT '',
     "delay" integer NOT NULL DEFAULT 0,
@@ -98,6 +98,9 @@ var MysqlSchema = []string{
     FOREIGN KEY ("systemId") REFERENCES "systems" ("systemId") ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY ("tagId") REFERENCES "tags" ("tagId") ON DELETE CASCADE ON UPDATE CASCADE
   );`,
+
+        `CREATE INDEX IF NOT EXISTS "systems_ref_idx" ON "systems" ("systemRef");`,
+        `CREATE INDEX IF NOT EXISTS "talkgroups_ref_idx" ON "talkgroups" ("talkgroupRef");`,
 
 	`CREATE TABLE IF NOT EXISTS "talkgroupGroups" (
     "talkgroupGroupId" bigint NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -149,12 +152,14 @@ var MysqlSchema = []string{
     FOREIGN KEY ("callId") REFERENCES "calls" ("callId") ON DELETE CASCADE ON UPDATE CASCADE
   );`,
 
-	`CREATE TABLE IF NOT EXISTS "delayed" (
+        `CREATE TABLE IF NOT EXISTS "delayed" (
     "delayedId" bigint NOT NULL AUTO_INCREMENT PRIMARY KEY,
     "callID" bigint NOT NULL,
     "timestamp" bigint NOT NULL,
     FOREIGN KEY ("callId") REFERENCES "calls" ("callId") ON DELETE CASCADE ON UPDATE CASCADE
   );`,
+
+        `CREATE INDEX IF NOT EXISTS "delayed_call_idx" ON "delayed" ("callId");`,
 
 	`CREATE TABLE IF NOT EXISTS "dirwatches" (
     "dirwatchId" bigint NOT NULL AUTO_INCREMENT PRIMARY KEY,
