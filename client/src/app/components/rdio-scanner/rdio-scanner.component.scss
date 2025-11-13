@@ -1,65 +1,74 @@
-$background-color: rgb(30, 30, 30);
+$background-color: rgba(2, 6, 23, 0.9);
+$panel-width: min(420px, 100%);
 
 :host {
-  background-color: $background-color;
-  color: rgb(255, 255, 255);
+  color: #e2e8f0;
   display: block;
-  height: 100%;
-  min-width: 320px;
+  min-height: 100%;
   position: relative;
 
-  .mat-sidenav {
-    background-color: inherit;
-    color: inherit;
-    width: 100%;
-  }
-
   .mat-sidenav-container {
-    background-color: inherit;
+    background-color: transparent;
     color: inherit;
-    height: inherit;
+    height: 100%;
   }
 
   .mat-sidenav-content {
-    align-items: center;
+    align-items: flex-start;
     display: flex;
-    flex-direction: row;
     justify-content: center;
+    min-height: 100%;
+    padding: clamp(16px, 4vw, 48px) clamp(16px, 6vw, 64px);
+  }
+
+  .mat-sidenav {
+    background: $background-color;
+    backdrop-filter: blur(16px);
+    box-shadow: -4px 0 24px rgba(15, 23, 42, 0.6);
+    color: inherit;
+    max-width: $panel-width;
+    width: 100%;
   }
 }
 
 .panel {
-  background-color: $background-color;
+  background-color: transparent;
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 100%;
+
+  > div {
+    flex: 1;
+    overflow: auto;
+    padding: 0 clamp(12px, 3vw, 24px) clamp(24px, 6vh, 48px);
+  }
+
+  .mat-toolbar {
+    background: transparent;
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    box-shadow: none;
+    color: inherit;
+    padding: 0 clamp(12px, 3vw, 24px);
+
+    > div {
+      align-items: center;
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+    }
+  }
 
   &.search .mat-toolbar > div {
     justify-content: flex-end;
   }
+}
 
-  > div {
-    flex: 1;
-    height: 100%;
-    overflow: auto;
-  }
-
-  .mat-toolbar {
-    background-color: inherit;
-    box-shadow: 0 4px 8px rgba($background-color, 0.8);
-    color: currentColor;
-    z-index: 2;
-
-    > div {
-      display: flex;
-      flex-direction: row;
+@media (max-width: 959px) {
+  :host {
+    .mat-sidenav-content {
+      padding: 24px 12px;
     }
-  }
-
-  > div > div,
-  .mat-toolbar > div {
-    margin: 0 auto;
-    max-width: 1200px;
-    width: 100%;
   }
 }

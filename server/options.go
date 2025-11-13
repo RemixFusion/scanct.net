@@ -56,7 +56,8 @@ const (
 
 func NewOptions() *Options {
 	return &Options{
-		mutex: sync.Mutex{},
+		Branding: "Scan CT",
+		mutex:    sync.Mutex{},
 	}
 }
 
