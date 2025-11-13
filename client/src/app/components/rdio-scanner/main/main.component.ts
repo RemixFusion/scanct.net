@@ -55,7 +55,7 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
     callDate: Date | undefined;
     callError = '0';
     callFrequency: string = this.formatFrequency(0);
-    callHistory: RdioScannerCall[] = new Array<RdioScannerCall>(5);
+    callHistory: RdioScannerCall[] = [];
     callPrevious: RdioScannerCall | undefined;
     callProgress = new Date(0, 0, 0, 0, 0, 0);
     callQueue = 0;
@@ -74,7 +74,7 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
     //
     // Be respectful, sponsor the project, use native apps when possible.
     //
-    callTalkgroupName = `Rdio Scanner v${packageInfo.version}`;
+    callTalkgroupName = `Scan CT v${packageInfo.version}`;
     //
     // END OF RED TAPE.
     //
@@ -131,6 +131,8 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
     @ViewChild('password', { read: MatInput }) private authPassword: MatInput | undefined;
 
     private clockTimer: Subscription | undefined;
+
+    private readonly callHistoryLimit = 120;
 
     private config: RdioScannerConfig | undefined;
 
@@ -324,6 +326,22 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
         }
     }
 
+    playFromHistory(call: RdioScannerCall): void {
+        if (this.auth) {
+            this.authFocus();
+
+            return;
+        }
+
+        if (call) {
+            this.rdioScannerService.beep(RdioScannerBeepStyle.Activate);
+
+            this.rdioScannerService.play(call);
+
+            this.updateDimmer();
+        }
+    }
+
     showHelp(): void {
         this.matSnackBar.openFromComponent(RdioScannerSupportComponent, {
             data: { email: this.email },
@@ -375,6 +393,10 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
 
     stop(): void {
         this.rdioScannerService.stop();
+    }
+
+    trackCall(index: number, call: RdioScannerCall): number | string {
+        return call?.id ?? index;
     }
 
     private eventHandler(event: RdioScannerEvent): void {
@@ -629,12 +651,9 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
 
             if (
                 this.callPrevious &&
-                this.callPrevious.id !== this.call.id &&
-                !this.callHistory.find((call: RdioScannerCall) => call?.id === this.callPrevious?.id)
+                this.callPrevious.id !== this.call.id
             ) {
-                this.callHistory.pop();
-
-                this.callHistory.unshift(this.callPrevious);
+                this.recordCallHistory(this.callPrevious);
             }
         }
 
@@ -668,5 +687,23 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
         }
 
         this.ngChangeDetectorRef.detectChanges();
+    }
+
+    private recordCallHistory(call: RdioScannerCall): void {
+        if (!call) {
+            return;
+        }
+
+        const existingIndex = this.callHistory.findIndex((item) => item?.id === call.id);
+
+        if (existingIndex >= 0) {
+            this.callHistory.splice(existingIndex, 1);
+        }
+
+        this.callHistory.unshift(call);
+
+        if (this.callHistory.length > this.callHistoryLimit) {
+            this.callHistory.length = this.callHistoryLimit;
+        }
     }
 }

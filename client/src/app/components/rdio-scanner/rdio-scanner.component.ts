@@ -22,6 +22,7 @@ import { MatSidenav } from '@angular/material/sidenav';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { timer } from 'rxjs';
 import { RdioScannerEvent, RdioScannerLivefeedMode } from './rdio-scanner';
+import { RdioScannerSearchComponent } from './search/search.component';
 import { RdioScannerService } from './rdio-scanner.service';
 import { RdioScannerNativeComponent } from './native/native.component';
 
@@ -85,6 +86,20 @@ export class RdioScannerComponent implements OnDestroy, OnInit {
 
     scrollTop(e: HTMLElement): void {
         setTimeout(() => e.scrollTo(0, 0));
+    }
+
+    openSearch(scrollable: HTMLElement, searchComponent?: Pick<RdioScannerSearchComponent, 'searchCalls'>): void {
+        this.scrollTop(scrollable);
+
+        this.searchPanel?.open();
+
+        searchComponent?.searchCalls();
+    }
+
+    openSelect(scrollable: HTMLElement): void {
+        this.scrollTop(scrollable);
+
+        this.selectPanel?.open();
     }
 
     start(): void {

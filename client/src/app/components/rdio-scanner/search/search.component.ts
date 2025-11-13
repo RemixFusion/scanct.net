@@ -56,7 +56,9 @@ export class RdioScannerSearchComponent implements OnDestroy {
 
     paused = false;
 
-    results = new BehaviorSubject(new Array<RdioScannerCall | null>(10));
+    readonly pageSize = 24;
+
+    results = new BehaviorSubject(new Array<RdioScannerCall | null>(this.pageSize));
     resultsPending = false;
 
     time12h = false;
@@ -65,7 +67,7 @@ export class RdioScannerSearchComponent implements OnDestroy {
 
     private eventSubscription;
 
-    private limit = 200;
+    private limit = this.pageSize;
 
     private offset = 0;
 
@@ -198,7 +200,9 @@ export class RdioScannerSearchComponent implements OnDestroy {
 
         const from = this.paginator.pageIndex * this.paginator.pageSize;
 
-        const to = this.paginator.pageIndex * this.paginator.pageSize + this.paginator.pageSize - 1;
+        const pageSize = this.paginator.pageSize || this.pageSize;
+
+        const to = this.paginator.pageIndex * pageSize + pageSize - 1;
 
         if (!this.callPending && (from >= this.offset + this.limit || from < this.offset)) {
             this.searchCalls();
@@ -206,7 +210,7 @@ export class RdioScannerSearchComponent implements OnDestroy {
         } else if (this.playbackList) {
             const calls: Array<RdioScannerCall | null> = this.playbackList.results.slice(from % this.limit, to % this.limit + 1);
 
-            while (calls.length < this.results.value.length) {
+            while (calls.length < pageSize) {
                 calls.push(null);
             }
 
@@ -237,7 +241,7 @@ export class RdioScannerSearchComponent implements OnDestroy {
 
         const pageIndex = this.paginator?.pageIndex || 0;
 
-        const pageSize = this.paginator?.pageSize || 0;
+        const pageSize = this.paginator?.pageSize || this.pageSize;
 
         this.offset = Math.floor((pageIndex * pageSize) / this.limit) * this.limit;
 
