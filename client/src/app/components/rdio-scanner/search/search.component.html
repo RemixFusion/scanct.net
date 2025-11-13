@@ -1,165 +1,201 @@
-<mat-card appearance="outlined" class="rdio-list">
-    <mat-table [dataSource]="results">
-        <ng-container matColumnDef="control">
+<div class="search-layout">
+  <mat-card class="summary" appearance="outlined">
+    <div class="summary-grid" *ngIf="playbackList as list">
+      <div class="metric">
+        <span class="label">Results</span>
+        <span class="value">{{ list.count | number }}</span>
+      </div>
+      <div class="metric">
+        <span class="label">Range start</span>
+        <span class="value">{{ list.dateStart | date: 'MMM d, y · h:mm a' }}</span>
+      </div>
+      <div class="metric">
+        <span class="label">Range end</span>
+        <span class="value">{{ list.dateStop | date: 'MMM d, y · h:mm a' }}</span>
+      </div>
+    </div>
+    <div class="summary-grid" *ngIf="!playbackList">
+      <div class="metric">
+        <span class="label">Results</span>
+        <span class="value">—</span>
+      </div>
+      <div class="metric">
+        <span class="label">Range start</span>
+        <span class="value">Waiting for search</span>
+      </div>
+      <div class="metric">
+        <span class="label">Range end</span>
+        <span class="value">Waiting for search</span>
+      </div>
+    </div>
+  </mat-card>
+
+  <mat-card class="results" appearance="outlined">
+    <mat-card-header>
+      <div class="header">
+        <div>
+          <h2>Call archive</h2>
+          <p>Browse historical calls captured by Scan CT.</p>
+        </div>
+        <mat-slide-toggle #downloadMode color="primary">Download mode</mat-slide-toggle>
+      </div>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="table-wrapper">
+        <mat-table [dataSource]="tableData" class="mat-elevation-z0">
+          <ng-container matColumnDef="control">
             <mat-header-cell *matHeaderCellDef></mat-header-cell>
             <mat-cell *matCellDef="let row">
-                <button *ngIf="downloadMode.checked && row" mat-icon-button (click)="download(+row.id)">
-                    <mat-icon>save_alt</mat-icon>
+              <ng-container *ngIf="row">
+                <button *ngIf="downloadMode.checked" mat-icon-button (click)="download(+row.id)">
+                  <mat-icon>download</mat-icon>
                 </button>
-                <button *ngIf="row && !downloadMode.checked && !paused && row?.id != call?.id && row?.id != callPending"
-                    mat-icon-button (click)="play(+row.id)">
-                    <mat-icon>play_arrow</mat-icon>
+                <button
+                  *ngIf="!downloadMode.checked && !paused && row?.id != call?.id && row?.id != callPending"
+                  mat-icon-button
+                  (click)="play(+row.id)"
+                >
+                  <mat-icon>play_arrow</mat-icon>
                 </button>
-                <button *ngIf="row && !downloadMode.checked && row?.id == callPending" mat-icon-button>
-                    <mat-icon class="spin">cached</mat-icon>
+                <button *ngIf="!downloadMode.checked && row?.id == callPending" mat-icon-button disabled>
+                  <mat-icon class="spin">cached</mat-icon>
                 </button>
-                <button *ngIf="row && !downloadMode.checked && row?.id == call?.id" mat-icon-button (click)="stop()">
-                    <mat-icon>stop</mat-icon>
+                <button *ngIf="!downloadMode.checked && row?.id == call?.id" mat-icon-button (click)="stop()">
+                  <mat-icon>stop</mat-icon>
                 </button>
+              </ng-container>
             </mat-cell>
-        </ng-container>
-        <ng-container matColumnDef="date">
-            <mat-header-cell *matHeaderCellDef>
-                <span>Date</span>
-            </mat-header-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="date">
+            <mat-header-cell *matHeaderCellDef>Date</mat-header-cell>
             <mat-cell *matCellDef="let row">
-                <span>{{ row?.dateTime | date:'MM/dd' }}</span>
+              <span>{{ row?.dateTime | date: 'MMM d' }}</span>
             </mat-cell>
-        </ng-container>
-        <ng-container matColumnDef="time">
-            <mat-header-cell *matHeaderCellDef [ngClass]="{'time12h': time12h}">
-                <span>Time</span>
-            </mat-header-cell>
-            <mat-cell *matCellDef="let row" [ngClass]="{'time12h': time12h}">
-                <span>{{ row?.dateTime | date: time12h ? 'h:mm a' : 'HH:mm' }}</span>
+          </ng-container>
+
+          <ng-container matColumnDef="time">
+            <mat-header-cell *matHeaderCellDef [ngClass]="{ time12h: time12h }">Time</mat-header-cell>
+            <mat-cell *matCellDef="let row" [ngClass]="{ time12h: time12h }">
+              <span>{{ row?.dateTime | date: time12h ? 'h:mm:ss a' : 'HH:mm:ss' }}</span>
             </mat-cell>
-        </ng-container>
-        <ng-container matColumnDef="system">
-            <mat-header-cell *matHeaderCellDef>
-                <span>System</span>
-            </mat-header-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="system">
+            <mat-header-cell *matHeaderCellDef>System</mat-header-cell>
             <mat-cell *matCellDef="let row">
-                <span>{{ row?.systemData?.label || row?.system }}</span>
+              <span>{{ row?.systemData?.label || row?.system }}</span>
             </mat-cell>
-        </ng-container>
-        <ng-container matColumnDef="alpha">
-            <mat-header-cell *matHeaderCellDef>
-                <span>Talkgroup</span>
-            </mat-header-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="alpha">
+            <mat-header-cell *matHeaderCellDef>Talkgroup</mat-header-cell>
             <mat-cell *matCellDef="let row">
-                <span>{{ row?.talkgroupData?.label || row?.talkgroup }}</span>
+              <span>{{ row?.talkgroupData?.label || row?.talkgroup }}</span>
             </mat-cell>
-        </ng-container>
-        <ng-container matColumnDef="name">
-            <mat-header-cell *matHeaderCellDef>
-                <span>Name</span>
-            </mat-header-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="name">
+            <mat-header-cell *matHeaderCellDef>Description</mat-header-cell>
             <mat-cell *matCellDef="let row">
-                <span>{{ row?.talkgroupData?.name }}</span>
+              <span>{{ row?.talkgroupData?.name || '—' }}</span>
             </mat-cell>
-        </ng-container>
-        <mat-header-row *matHeaderRowDef="['control', 'date', 'time', 'system', 'alpha', 'name']">
-        </mat-header-row>
-        <mat-row *matRowDef="let row; columns: ['control', 'date', 'time', 'system', 'alpha', 'name']">
-        </mat-row>
-    </mat-table>
-    <mat-progress-bar color="primary" [mode]="resultsPending ? 'query' : 'determinate'">
-    </mat-progress-bar>
-    <div class="paginator">
-        <mat-slide-toggle #downloadMode color="primary" labelPosition="before">
-            <mat-icon>save_alt</mat-icon>
-        </mat-slide-toggle>
-        <mat-paginator [disabled]="livefeedPlayback || resultsPending" [length]="playbackList?.count"
-            [hidePageSize]="true" [pageSize]="results.value.length" [showFirstLastButtons]="true"
-            (page)="refreshResults()">
-        </mat-paginator>
-    </div>
-</mat-card>
-<mat-card appearance="outlined" class="rdio-filters">
-    <form autocomplete="off" [formGroup]="form">
-        <mat-form-field>
-            <mat-label>
-                Sort order
-            </mat-label>
-            <mat-select formControlName="sort" (selectionChange)="formChangeHandler()">
-                <mat-option [value]="1">
-                    Ascending
-                </mat-option>
-                <mat-option [value]="-1">
-                    Descending
-                </mat-option>
-            </mat-select>
+          </ng-container>
+
+          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns" class="result-row"></mat-row>
+          <tr matNoDataRow>
+            <td class="empty" [attr.colspan]="displayedColumns.length">
+              <mat-icon>search_off</mat-icon>
+              <p>No calls match the current filters yet.</p>
+            </td>
+          </tr>
+        </mat-table>
+      </div>
+      <mat-progress-bar color="primary" [mode]="resultsPending ? 'query' : 'determinate'"></mat-progress-bar>
+      <div class="paginator">
+        <mat-paginator
+          [disabled]="livefeedPlayback || resultsPending"
+          [length]="playbackList?.count || 0"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="pageSizeOptions"
+          [showFirstLastButtons]="true"
+          (page)="handlePage($event)"
+        ></mat-paginator>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="filters" appearance="outlined">
+    <mat-card-header>
+      <h2>Refine results</h2>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="form" autocomplete="off" class="filters-form">
+        <mat-form-field appearance="outline">
+          <mat-label>Sort order</mat-label>
+          <mat-select formControlName="sort" (selectionChange)="formChangeHandler()">
+            <mat-option [value]="1">Oldest first</mat-option>
+            <mat-option [value]="-1">Newest first</mat-option>
+          </mat-select>
         </mat-form-field>
-        <mat-form-field>
-            <mat-label>
-                Date
-            </mat-label>
-            <input matInput type="datetime-local" formControlName="date" [max]="playbackList?.dateStop"
-                [min]="playbackList?.dateStart" placeholder="Choose a date" (change)="formChangeHandler()">
+
+        <mat-form-field appearance="outline">
+          <mat-label>Date &amp; time</mat-label>
+          <input
+            matInput
+            type="datetime-local"
+            formControlName="date"
+            [max]="playbackList?.dateStop"
+            [min]="playbackList?.dateStart"
+            (change)="formChangeHandler()"
+          />
         </mat-form-field>
-        <mat-form-field>
-            <mat-label>
-                System
-            </mat-label>
-            <mat-select formControlName="system" (selectionChange)="formChangeHandler()">
-                <mat-option [value]="-1">
-                    All Systems
-                </mat-option>
-                <mat-option *ngFor="let system of optionsSystem; index as i" [value]="i">
-                    {{ system }}
-                </mat-option>
-            </mat-select>
+
+        <mat-form-field appearance="outline">
+          <mat-label>System</mat-label>
+          <mat-select formControlName="system" (selectionChange)="formChangeHandler()">
+            <mat-option [value]="-1">All systems</mat-option>
+            <mat-option *ngFor="let system of optionsSystem; index as i" [value]="i">{{ system }}</mat-option>
+          </mat-select>
         </mat-form-field>
-        <mat-form-field>
-            <mat-label>
-                Talkgroup
-            </mat-label>
-            <mat-select formControlName="talkgroup" (selectionChange)="formChangeHandler()">
-                <mat-option [value]="-1">
-                    All Talkgroups
-                </mat-option>
-                <mat-option *ngFor="let talkgroup of optionsTalkgroup; index as i" [value]="i">
-                    {{ talkgroup }}
-                </mat-option>
-            </mat-select>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Talkgroup</mat-label>
+          <mat-select formControlName="talkgroup" (selectionChange)="formChangeHandler()">
+            <mat-option [value]="-1">All talkgroups</mat-option>
+            <mat-option *ngFor="let talkgroup of optionsTalkgroup; index as i" [value]="i">{{ talkgroup }}</mat-option>
+          </mat-select>
         </mat-form-field>
-        <mat-form-field>
-            <mat-label>
-                Group
-            </mat-label>
-            <mat-select formControlName="group" (selectionChange)="formChangeHandler()">
-                <mat-option [value]="-1">
-                    All Groups
-                </mat-option>
-                <mat-option *ngFor="let group of optionsGroup; index as i" [value]="i">
-                    {{ group }}
-                </mat-option>
-            </mat-select>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Group</mat-label>
+          <mat-select formControlName="group" (selectionChange)="formChangeHandler()">
+            <mat-option [value]="-1">All groups</mat-option>
+            <mat-option *ngFor="let group of optionsGroup; index as i" [value]="i">{{ group }}</mat-option>
+          </mat-select>
         </mat-form-field>
-        <mat-form-field>
-            <mat-label>
-                Tag
-            </mat-label>
-            <mat-select formControlName="tag" (selectionChange)="formChangeHandler()">
-                <mat-option [value]="-1">
-                    All Tags
-                </mat-option>
-                <mat-option *ngFor="let tag of optionsTag; index as i" [value]="i">
-                    {{ tag }}
-                </mat-option>
-            </mat-select>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Tag</mat-label>
+          <mat-select formControlName="tag" (selectionChange)="formChangeHandler()">
+            <mat-option [value]="-1">All tags</mat-option>
+            <mat-option *ngFor="let tag of optionsTag; index as i" [value]="i">{{ tag }}</mat-option>
+          </mat-select>
         </mat-form-field>
-        <mat-form-field>
-            <mat-label>
-                Unit
-            </mat-label>
-            <input type="number" matInput>
-            <mat-icon matSuffix>search</mat-icon>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Unit ID</mat-label>
+          <input matInput type="number" formControlName="unit" (change)="formChangeHandler()" />
+          <mat-icon matSuffix>badge</mat-icon>
         </mat-form-field>
+
         <div class="reset">
-            <button mat-raised-button type="button" [disabled]="resultsPending" (click)="resetForm()">
-                Reset
-            </button>
+          <button mat-stroked-button color="primary" type="button" [disabled]="resultsPending" (click)="resetForm()">
+            Reset filters
+          </button>
         </div>
-    </form>
-</mat-card>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

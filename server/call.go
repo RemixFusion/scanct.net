@@ -348,13 +348,16 @@ func (calls *Calls) Search(searchOptions *CallsSearchOptions, client *Client) (*
 		err  error
 		rows *sql.Rows
 
-		limit  uint
-		offset uint
-		order  string
-		query  string
-		where  string = `c."systemId" > 0 AND c."talkgroupId" > 0 AND s."systemRef" IS NOT NULL AND t."talkgroupRef" IS NOT NULL AND d."callId" IS NULL`
+                limit        uint
+                offset       uint
+                order        string
+                query        string
+                where        string = `c."systemId" > 0 AND c."talkgroupId" > 0 AND s."systemRef" IS NOT NULL AND t."talkgroupRef" IS NOT NULL AND d."callId" IS NULL`
 
-		timestamp int64
+                count        sql.NullInt64
+                maxTimestamp sql.NullInt64
+                minTimestamp sql.NullInt64
+                timestamp    int64
 	)
 
 	calls.mutex.Lock()
@@ -433,19 +436,22 @@ func (calls *Calls) Search(searchOptions *CallsSearchOptions, client *Client) (*
 		}
 	}
 
-	query = fmt.Sprintf(`SELECT c."timestamp" FROM "calls" AS c LEFT JOIN "systems" AS s ON s."systemId" = c."systemId" LEFT JOIN "talkgroups" AS t ON t."talkgroupId" = c."talkgroupId" LEFT JOIN "delayed" AS d ON d."callId" = c."callId" WHERE %s ORDER BY c."timestamp" ASC`, where)
-	if err = db.Sql.QueryRow(query).Scan(&timestamp); err != nil && err != sql.ErrNoRows {
-		return nil, formatError(err, query)
-	}
+        query = fmt.Sprintf(`SELECT MIN(c."timestamp"), MAX(c."timestamp"), COUNT(*) FROM "calls" AS c LEFT JOIN "systems" AS s ON s."systemId" = c."systemId" LEFT JOIN "talkgroups" AS t ON t."talkgroupId" = c."talkgroupId" LEFT JOIN "delayed" AS d ON d."callId" = c."callId" WHERE %s`, where)
+        if err = db.Sql.QueryRow(query).Scan(&minTimestamp, &maxTimestamp, &count); err != nil && err != sql.ErrNoRows {
+                return nil, formatError(err, query)
+        }
 
-	searchResults.DateStart = time.UnixMilli(timestamp)
+        if minTimestamp.Valid {
+                searchResults.DateStart = time.UnixMilli(minTimestamp.Int64)
+        }
 
-	query = fmt.Sprintf(`SELECT c."timestamp" FROM "calls" AS c LEFT JOIN "systems" AS s ON s."systemId" = c."systemId" LEFT JOIN "talkgroups" AS t ON t."talkgroupId" = c."talkgroupId" LEFT JOIN "delayed" AS d ON d."callId" = c."callId" WHERE %s ORDER BY c."timestamp" DESC`, where)
-	if err = db.Sql.QueryRow(query).Scan(&timestamp); err != nil && err != sql.ErrNoRows {
-		return nil, formatError(err, query)
-	}
+        if maxTimestamp.Valid {
+                searchResults.DateStop = time.UnixMilli(maxTimestamp.Int64)
+        }
 
-	searchResults.DateStop = time.UnixMilli(timestamp)
+        if count.Valid {
+                searchResults.Count = uint(count.Int64)
+        }
 
 	switch v := searchOptions.Sort.(type) {
 	case int:
@@ -489,12 +495,7 @@ func (calls *Calls) Search(searchOptions *CallsSearchOptions, client *Client) (*
 		offset = v
 	}
 
-	query = fmt.Sprintf(`SELECT COUNT(*) FROM "calls" AS c LEFT JOIN "systems" AS s ON s."systemId" = c."systemId" LEFT JOIN "talkgroups" AS t ON t."talkgroupId" = c."talkgroupId" LEFT JOIN "delayed" AS d ON d."callId" = c."callId" WHERE %s`, where)
-	if err = db.Sql.QueryRow(query).Scan(&searchResults.Count); err != nil && err != sql.ErrNoRows {
-		return nil, formatError(err, query)
-	}
-
-	query = fmt.Sprintf(`SELECT c."callId", c."timestamp", s."systemRef", t."talkgroupRef" FROM "calls" AS c LEFT JOIN "systems" AS s ON s."systemId" = c."systemId" LEFT JOIN "talkgroups" AS t ON t."talkgroupId" = c."talkgroupId" LEFT JOIN "delayed" AS d ON d."callId" = c."callId" WHERE %s ORDER BY c."timestamp" %s LIMIT %d OFFSET %d`, where, order, limit, offset)
+        query = fmt.Sprintf(`SELECT c."callId", c."timestamp", s."systemRef", t."talkgroupRef" FROM "calls" AS c LEFT JOIN "systems" AS s ON s."systemId" = c."systemId" LEFT JOIN "talkgroups" AS t ON t."talkgroupId" = c."talkgroupId" LEFT JOIN "delayed" AS d ON d."callId" = c."callId" WHERE %s ORDER BY c."timestamp" %s LIMIT %d OFFSET %d`, where, order, limit, offset)
 	if rows, err = db.Sql.Query(query); err != nil && err != sql.ErrNoRows {
 		return nil, formatError(err, query)
 	}

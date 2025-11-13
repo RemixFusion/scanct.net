@@ -19,8 +19,8 @@
 
 import { ChangeDetectorRef, Component, OnDestroy, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { MatPaginator } from '@angular/material/paginator';
-import { BehaviorSubject } from 'rxjs';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
+import { MatTableDataSource } from '@angular/material/table';
 import {
     RdioScannerCall,
     RdioScannerConfig,
@@ -56,8 +56,15 @@ export class RdioScannerSearchComponent implements OnDestroy {
 
     paused = false;
 
-    results = new BehaviorSubject(new Array<RdioScannerCall | null>(10));
+    displayedColumns: string[] = ['control', 'date', 'time', 'system', 'alpha', 'name'];
+
+    pageSize = 25;
+
+    pageSizeOptions: number[] = [10, 25, 50];
+
     resultsPending = false;
+
+    tableData = new MatTableDataSource<RdioScannerCall>([]);
 
     time12h = false;
 
@@ -83,7 +90,7 @@ export class RdioScannerSearchComponent implements OnDestroy {
             system: number;
             tag: number;
             talkgroup: number;
-            unit: number;
+            unit: number | null;
         }>({
             date: null,
             group: -1,
@@ -91,7 +98,7 @@ export class RdioScannerSearchComponent implements OnDestroy {
             system: -1,
             tag: -1,
             talkgroup: -1,
-            unit: -1,
+            unit: null,
         });
 
         this.eventSubscription = this.rdioScannerService.event.subscribe((event: RdioScannerEvent) => this.eventHandler(event));
@@ -111,6 +118,12 @@ export class RdioScannerSearchComponent implements OnDestroy {
         this.refreshFilters();
 
         this.searchCalls();
+    }
+
+    handlePage(event: PageEvent): void {
+        this.pageSize = event.pageSize;
+
+        this.refreshResults();
     }
 
     ngOnDestroy(): void {
@@ -192,26 +205,26 @@ export class RdioScannerSearchComponent implements OnDestroy {
     }
 
     refreshResults(): void {
-        if (!this.paginator) {
+        if (!this.paginator || !this.playbackList) {
             return;
         }
 
-        const from = this.paginator.pageIndex * this.paginator.pageSize;
+        const pageIndex = this.paginator.pageIndex;
+        const pageSize = this.paginator.pageSize || this.pageSize;
+        this.pageSize = pageSize;
+        const from = pageIndex * pageSize;
+        const to = from + pageSize;
 
-        const to = this.paginator.pageIndex * this.paginator.pageSize + this.paginator.pageSize - 1;
-
-        if (!this.callPending && (from >= this.offset + this.limit || from < this.offset)) {
+        if (!this.callPending && (from < this.offset || to > this.offset + this.playbackList.results.length)) {
             this.searchCalls();
 
-        } else if (this.playbackList) {
-            const calls: Array<RdioScannerCall | null> = this.playbackList.results.slice(from % this.limit, to % this.limit + 1);
-
-            while (calls.length < this.results.value.length) {
-                calls.push(null);
-            }
-
-            this.results.next(calls);
+            return;
         }
+
+        const start = Math.max(0, from - this.offset);
+        const end = Math.min(this.playbackList.results.length, start + pageSize);
+
+        this.tableData.data = this.playbackList.results.slice(start, end);
     }
 
     resetForm(): void {
@@ -222,7 +235,7 @@ export class RdioScannerSearchComponent implements OnDestroy {
             system: -1,
             tag: -1,
             talkgroup: -1,
-            unit: -1,
+            unit: null,
         });
 
         this.paginator?.firstPage();
@@ -237,7 +250,13 @@ export class RdioScannerSearchComponent implements OnDestroy {
 
         const pageIndex = this.paginator?.pageIndex || 0;
 
-        const pageSize = this.paginator?.pageSize || 0;
+        const pageSize = this.paginator?.pageSize || this.pageSize;
+
+        const adaptiveLimit = Math.max(this.limit, pageSize * 8);
+
+        if (adaptiveLimit !== this.limit) {
+            this.limit = adaptiveLimit;
+        }
 
         this.offset = Math.floor((pageIndex * pageSize) / this.limit) * this.limit;
 
@@ -285,7 +304,9 @@ export class RdioScannerSearchComponent implements OnDestroy {
 
         this.resultsPending = true;
 
-        this.form.disable();
+        this.tableData.data = [];
+
+        this.form.disable({ emitEvent: false });
 
         this.rdioScannerService.searchCalls(options);
     }
@@ -304,7 +325,7 @@ export class RdioScannerSearchComponent implements OnDestroy {
             this.call = event.call;
 
             if (this.callPending) {
-                const index = this.results.value.findIndex((call) => call?.id === this.callPending);
+                const index = this.tableData.data.findIndex((call) => call?.id === this.callPending);
 
                 if (index === -1) {
                     if (this.form.get('sort')?.value === -1) {
@@ -344,7 +365,15 @@ export class RdioScannerSearchComponent implements OnDestroy {
 
             this.resultsPending = false;
 
-            this.form.enable();
+            this.form.enable({ emitEvent: false });
+
+            if (typeof this.playbackList?.options?.limit === 'number') {
+                this.limit = this.playbackList.options.limit;
+            }
+
+            if (typeof this.playbackList?.options?.offset === 'number') {
+                this.offset = this.playbackList.options.offset;
+            }
         }
 
         if ('playbackPending' in event) {

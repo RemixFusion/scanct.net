@@ -18,7 +18,7 @@
  */
 
 import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { MatSidenav } from '@angular/material/sidenav';
+import { MatDrawer } from '@angular/material/sidenav';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { timer } from 'rxjs';
 import { RdioScannerEvent, RdioScannerLivefeedMode } from './rdio-scanner';
@@ -35,9 +35,13 @@ export class RdioScannerComponent implements OnDestroy, OnInit {
 
     private livefeedMode: RdioScannerLivefeedMode = RdioScannerLivefeedMode.Offline;
 
-    @ViewChild('searchPanel') private searchPanel: MatSidenav | undefined;
+    @ViewChild('searchPanel') private searchPanel: MatDrawer | undefined;
 
-    @ViewChild('selectPanel') private selectPanel: MatSidenav | undefined;
+    @ViewChild('selectPanel') private selectPanel: MatDrawer | undefined;
+
+    @ViewChild('searchBody', { read: ElementRef }) private searchBody: ElementRef<HTMLElement> | undefined;
+
+    @ViewChild('selectBody', { read: ElementRef }) private selectBody: ElementRef<HTMLElement> | undefined;
 
     constructor(
         private matSnackBar: MatSnackBar,
@@ -83,8 +87,36 @@ export class RdioScannerComponent implements OnDestroy, OnInit {
          */
     }
 
-    scrollTop(e: HTMLElement): void {
-        setTimeout(() => e.scrollTo(0, 0));
+    get livefeedIdle(): boolean {
+        return this.livefeedMode === RdioScannerLivefeedMode.Offline;
+    }
+
+    get livefeedRunning(): boolean {
+        return this.livefeedMode === RdioScannerLivefeedMode.Online;
+    }
+
+    openSearch(): void {
+        if (this.searchPanel) {
+            this.selectPanel?.close();
+            this.scrollTop(this.searchBody?.nativeElement);
+            this.searchPanel.open();
+        }
+    }
+
+    openSelect(): void {
+        if (this.selectPanel) {
+            this.searchPanel?.close();
+            this.scrollTop(this.selectBody?.nativeElement);
+            this.selectPanel.open();
+        }
+    }
+
+    scrollTop(element?: HTMLElement | null): void {
+        if (!element) {
+            return;
+        }
+
+        setTimeout(() => element.scrollTo({ top: 0, behavior: 'smooth' }));
     }
 
     start(): void {

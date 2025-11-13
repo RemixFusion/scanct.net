@@ -24,6 +24,7 @@ import {
     RdioScannerCategory,
     RdioScannerCategoryStatus,
     RdioScannerEvent,
+    RdioScannerLivefeed,
     RdioScannerLivefeedMap,
     RdioScannerSystem,
 } from '../rdio-scanner';
@@ -58,7 +59,9 @@ export class RdioScannerSelectComponent implements OnDestroy {
             this.rdioScannerService.beep(RdioScannerBeepStyle.Deactivate);
 
         } else if (options?.system !== undefined && options?.talkgroup !== undefined) {
-            this.rdioScannerService.beep(this.map[options.system.id][options.talkgroup.id].active
+            const state = this.getTalkgroupState(options.system.id, options.talkgroup.id);
+
+            this.rdioScannerService.beep(state?.active
                 ? RdioScannerBeepStyle.Deactivate
                 : RdioScannerBeepStyle.Activate
             );
@@ -72,6 +75,22 @@ export class RdioScannerSelectComponent implements OnDestroy {
 
     ngOnDestroy(): void {
         this.eventSubscription.unsubscribe();
+    }
+
+    getTalkgroupClasses(systemId: number, talkgroupId: number): { [klass: string]: boolean } {
+        const state = this.getTalkgroupState(systemId, talkgroupId);
+
+        return {
+            blink: !!state?.minutes,
+            off: !state?.active,
+            on: !!state?.active,
+        };
+    }
+
+    getTalkgroupState(systemId: number, talkgroupId: number): RdioScannerLivefeed | undefined {
+        const system = this.map ? this.map[systemId] : undefined;
+
+        return system ? system[talkgroupId] : undefined;
     }
 
     toggle(category: RdioScannerCategory): void {

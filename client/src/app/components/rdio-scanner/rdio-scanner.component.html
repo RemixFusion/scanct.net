@@ -1,41 +1,77 @@
-<mat-sidenav-container [hasBackdrop]="false">
-    <mat-sidenav #searchPanel [autoFocus]="false" [disableClose]="true" position="start">
-        <div class="panel search">
-            <mat-toolbar>
-                <div>
-                    <button mat-icon-button (click)="searchPanel.close()">
-                        <mat-icon>arrow_forward</mat-icon>
-                    </button>
-                </div>
-            </mat-toolbar>
-            <div #scrollableSearch>
-                <div>
-                    <rdio-scanner-search #searchComponent></rdio-scanner-search>
-                </div>
-            </div>
+<mat-drawer-container class="scanct-shell" autosize>
+  <mat-drawer
+    #searchPanel
+    class="scanct-drawer search"
+    mode="over"
+    position="start"
+    [autoFocus]="false"
+  >
+    <mat-toolbar color="primary">
+      <span>Search calls</span>
+      <span class="spacer"></span>
+      <button mat-icon-button (click)="searchPanel.close()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-toolbar>
+    <div class="drawer-body" #searchBody>
+      <rdio-scanner-search></rdio-scanner-search>
+    </div>
+  </mat-drawer>
+
+  <mat-drawer
+    #selectPanel
+    class="scanct-drawer select"
+    mode="over"
+    position="end"
+    [autoFocus]="false"
+  >
+    <mat-toolbar color="primary">
+      <span>Talkgroup control</span>
+      <span class="spacer"></span>
+      <button mat-icon-button (click)="selectPanel.close()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-toolbar>
+    <div class="drawer-body" #selectBody>
+      <rdio-scanner-select></rdio-scanner-select>
+    </div>
+  </mat-drawer>
+
+  <mat-drawer-content>
+    <div class="scanct-app">
+      <mat-toolbar class="scanct-toolbar" color="primary">
+        <div class="brand">
+          <span class="logo">Scan CT</span>
+          <span class="tagline">Connecticut statewide scanner dashboard</span>
         </div>
-    </mat-sidenav>
-    <mat-sidenav #selectPanel [autoFocus]="false" [disableClose]="true" position="end">
-        <div class="panel select">
-            <mat-toolbar>
-                <div>
-                    <button mat-icon-button (click)="selectPanel.close()">
-                        <mat-icon>arrow_back</mat-icon>
-                    </button>
-                </div>
-            </mat-toolbar>
-            <div #scrollableSelect>
-                <div>
-                    <rdio-scanner-select></rdio-scanner-select>
-                </div>
-            </div>
+        <span class="flex-spacer"></span>
+        <div class="toolbar-actions">
+          <button mat-icon-button matTooltip="Start live feed" color="primary" (click)="start()" [disabled]="livefeedRunning">
+            <mat-icon>play_arrow</mat-icon>
+          </button>
+          <button mat-icon-button matTooltip="Stop live feed" color="primary" (click)="stop()" [disabled]="livefeedIdle">
+            <mat-icon>stop</mat-icon>
+          </button>
+          <button mat-icon-button matTooltip="Search archive" (click)="openSearch()">
+            <mat-icon>search</mat-icon>
+          </button>
+          <button mat-icon-button matTooltip="Talkgroup picker" (click)="openSelect()">
+            <mat-icon>tune</mat-icon>
+          </button>
+          <button mat-icon-button matTooltip="Toggle fullscreen" (click)="toggleFullscreen()">
+            <mat-icon>fullscreen</mat-icon>
+          </button>
         </div>
-    </mat-sidenav>
-    <mat-sidenav-content>
+      </mat-toolbar>
+
+      <div class="scanct-content">
         <rdio-scanner-main
-            (openSearchPanel)="scrollTop(scrollableSearch); searchPanel.open(); searchComponent.searchCalls()"
-            (openSelectPanel)="scrollTop(scrollableSelect); selectPanel.open();"
-            (toggleFullscreen)="toggleFullscreen()">
-        </rdio-scanner-main>
-    </mat-sidenav-content>
-</mat-sidenav-container>
+          class="scanct-main"
+          (openSearchPanel)="openSearch()"
+          (openSelectPanel)="openSelect()"
+          (toggleFullscreen)="toggleFullscreen()"
+        ></rdio-scanner-main>
+      </div>
+    </div>
+  </mat-drawer-content>
+</mat-drawer-container>
