@@ -1,177 +1,206 @@
-<div class="rdio-status">
-    <div class="branding">{{ branding }}</div>
-    <div class="led" [ngClass]="ledStyle"></div>
-</div>
-<div class="rdio-display" [ngClass]="{ idle: !dimmer }" (dblclick)="toggleFullscreen.emit()">
-    <div class="row three">
-        <div>
-            <span>{{ clock | date:timeFormat }}</span>
-        </div>
-        <div>
-            <span *ngIf="!linked">NO LINK</span>
-            <span *ngIf="linked && showListenersCount">L: {{ listeners }}</span>
-        </div>
-        <div>
-            <span>Q: {{ callQueue }}</span>
-        </div>
-    </div>
-    <div class="row small"></div>
-    <div class="row">
-        <div>
-            <span>{{ callSystem }}</span>
-        </div>
-        <div>
-            <span>{{ type | uppercase }}</span>
-        </div>
-        <div>
-            <span>{{ callTag }}</span>
-        </div>
-    </div>
-    <div class="row">
-        <div>
-            <span>{{ callTalkgroup }}</span>
-        </div>
-        <div></div>
-        <div>
-            <span>{{ callDate | date:'MM/dd' }} </span>
-            <span>{{ callProgress | date:timeFormat }}</span>
-        </div>
-    </div>
-    <div class="row big full">
-        <span>{{ callTalkgroupName }}</span>
-    </div>
-    <div class="row">
-        <div>
-            <span>F: {{ callFrequency || 0 }}</span>
-        </div>
-        <div></div>
-        <div>
-            <span>TGID: {{ callTalkgroupId || 0 }}</span>
-        </div>
-    </div>
-    <div class="row">
-        <div>
-            <span>E: {{ callError || 0 }} S: {{ callSpike || 0 }} </span>
-        </div>
-        <div></div>
-        <div>
-            <span *ngIf="callUnit">UID: {{ callUnit }}</span>
-        </div>
-    </div>
-    <div class="row right small">
-        <div></div>
-        <div></div>
-        <div>
-            <div *ngIf="tempAvoid">
-                <span class="flag" [ngClass]="{ flaged: avoided || patched }">&#x23f2;&#xFE0E; {{ tempAvoid }}M</span>
+<div class="dashboard" (dblclick)="toggleFullscreen.emit()">
+    <div class="dashboard__primary">
+        <mat-card class="now-playing mat-elevation-z8">
+            <div class="now-playing__auth" *ngIf="auth">
+                <form class="auth-form mat-elevation-z6" autocomplete="off" [formGroup]="authForm"
+                    (ngSubmit)="authenticate()">
+                    <h3>Unlock Scan CT</h3>
+                    <mat-form-field appearance="fill">
+                        <mat-label>Unlock code</mat-label>
+                        <input #password matInput type="password" autocomplete="off" formControlName="password"
+                            (blur)="authFocus()">
+                        <mat-error *ngIf="authForm.get('password')?.hasError('expired')">
+                            This unlock code has expired
+                        </mat-error>
+                        <mat-error *ngIf="authForm.get('password')?.hasError('tooMany')">
+                            Too many connections
+                        </mat-error>
+                    </mat-form-field>
+                    <button mat-raised-button color="primary" type="submit">Unlock</button>
+                </form>
             </div>
-            <div>
-                <span class="flag" [ngClass]="{ flaged: avoided }">AVOID</span>
+            <div class="now-playing__header">
+                <div class="status">
+                    <span class="status__branding">{{ branding || 'Scan CT' }}</span>
+                    <div class="status__meta">
+                        <div>
+                            <mat-icon fontIcon="schedule"></mat-icon>
+                            <span>{{ clock | date:timeFormat }}</span>
+                        </div>
+                        <div>
+                            <mat-icon fontIcon="queue_music"></mat-icon>
+                            <span>Queue {{ callQueue }}</span>
+                        </div>
+                        <div>
+                            <mat-icon fontIcon="headset"></mat-icon>
+                            <span *ngIf="linked && showListenersCount">{{ listeners }} listening</span>
+                            <span *ngIf="!linked">Not linked</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="indicator" [ngClass]="ledStyle"></div>
             </div>
-            <div>
-                <span class="flag" [ngClass]="{ flaged: patched }">PATCH</span>
+            <div class="now-playing__body">
+                <div class="callline">
+                    <div>
+                        <span class="label">System</span>
+                        <span class="value">{{ callSystem || '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="label">Talkgroup</span>
+                        <span class="value">{{ callTalkgroup || '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="label">Mode</span>
+                        <span class="value">{{ type ? (type | uppercase) : '—' }}</span>
+                    </div>
+                </div>
+                <div class="callline emphasis">
+                    <div class="callline__title">{{ callTalkgroupName }}</div>
+                    <div class="callline__time" *ngIf="callDate">
+                        {{ callDate | date:'MM/dd' }} · {{ callProgress | date:timeFormat }}
+                    </div>
+                    <div class="callline__time" *ngIf="!callDate">
+                        {{ callProgress | date:timeFormat }}
+                    </div>
+                </div>
+                <div class="callgrid">
+                    <div>
+                        <span class="label">Frequency</span>
+                        <span class="value">{{ callFrequency || '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="label">TGID</span>
+                        <span class="value">{{ callTalkgroupId || '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="label">Unit</span>
+                        <span class="value">{{ callUnit || '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="label">Errors</span>
+                        <span class="value">{{ callError || '0' }}</span>
+                    </div>
+                    <div>
+                        <span class="label">Spikes</span>
+                        <span class="value">{{ callSpike || '0' }}</span>
+                    </div>
+                    <div>
+                        <span class="label">Type</span>
+                        <span class="value">{{ callTag || '—' }}</span>
+                    </div>
+                </div>
+                <mat-chip-listbox class="flags" aria-label="Call status">
+                    <mat-chip-option matTooltip="Temporary avoid" *ngIf="tempAvoid" selected>
+                        ⏲ {{ tempAvoid }} min
+                    </mat-chip-option>
+                    <mat-chip-option [selected]="avoided">Avoid</mat-chip-option>
+                    <mat-chip-option [selected]="patched">Patch</mat-chip-option>
+                    <mat-chip-option [selected]="delayed">Delayed</mat-chip-option>
+                </mat-chip-listbox>
             </div>
-            <div>
-                <span class="flag" [ngClass]="{ flaged: delayed }">DELAYED</span>
-            </div>
-        </div>
+        </mat-card>
+        <mat-card class="controls mat-elevation-z6">
+            <mat-card-header>
+                <mat-card-title>Live controls</mat-card-title>
+                <mat-card-subtitle>Run the Trunk Recorder feed without leaving the browser.</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+                <div class="controls__grid">
+                    <button mat-raised-button color="accent" class="control-button"
+                        [class.control-button--on]="livefeedOnline"
+                        [class.control-button--pending]="playbackMode"
+                        [class.control-button--off]="livefeedOffline && !playbackMode"
+                        (click)="livefeed()">
+                        <mat-icon>radio</mat-icon>
+                        <span>Live feed</span>
+                    </button>
+                    <button mat-stroked-button class="control-button" [class.control-button--on]="holdSys"
+                        (click)="holdSystem()">
+                        <mat-icon>domain</mat-icon>
+                        <span>Hold system</span>
+                    </button>
+                    <button mat-stroked-button class="control-button" [class.control-button--on]="holdTg"
+                        (click)="holdTalkgroup()">
+                        <mat-icon>speaker_group</mat-icon>
+                        <span>Hold talkgroup</span>
+                    </button>
+                    <button mat-stroked-button class="control-button" (click)="replay()">
+                        <mat-icon>replay_5</mat-icon>
+                        <span>Replay last</span>
+                    </button>
+                    <button mat-stroked-button class="control-button" (click)="skip()">
+                        <mat-icon>skip_next</mat-icon>
+                        <span>Skip next</span>
+                    </button>
+                    <button mat-stroked-button class="control-button" (click)="avoid()">
+                        <mat-icon>do_not_disturb_on</mat-icon>
+                        <span>Avoid</span>
+                    </button>
+                    <button mat-stroked-button class="control-button" (click)="showSearchPanel()">
+                        <mat-icon>search</mat-icon>
+                        <span>Search calls</span>
+                    </button>
+                    <button mat-stroked-button class="control-button" [class.control-button--on]="livefeedPaused"
+                        (click)="pause()">
+                        <mat-icon>{{ livefeedPaused ? 'play_arrow' : 'pause' }}</mat-icon>
+                        <span>{{ livefeedPaused ? 'Resume' : 'Pause' }}</span>
+                    </button>
+                    <button mat-stroked-button class="control-button" (click)="showSelectPanel()">
+                        <mat-icon>tune</mat-icon>
+                        <span>Select talkgroups</span>
+                    </button>
+                </div>
+            </mat-card-content>
+            <mat-card-actions align="end">
+                <button mat-button color="primary" *ngIf="email" (click)="showHelp()">
+                    <mat-icon>help</mat-icon>
+                    Support
+                </button>
+                <button mat-button (click)="stop()">
+                    <mat-icon>power_settings_new</mat-icon>
+                    Stop playback
+                </button>
+            </mat-card-actions>
+        </mat-card>
     </div>
-    <div class="wrapper">
-        <div class="auth" [ngClass]="{ visible: auth }">
-            <form class="mat-elevation-z8" autocomplete="off" [formGroup]="authForm" (ngSubmit)="authenticate()">
-                <mat-form-field>
-                    <input #password matInput type="password" autocomplete="off" formControlName="password"
-                        placeholder="Unlock code" (blur)="authFocus()">
-                    <mat-error *ngIf="authForm.get('password')?.hasError('expired')">
-                        This unlock code has expired
-                    </mat-error>
-                    <mat-error *ngIf="authForm.get('password')?.hasError('tooMany')">
-                        Too many connections
-                    </mat-error>
-                </mat-form-field>
-            </form>
-        </div>
-        <table class="history">
-            <thead>
-                <tr>
-                    <th>
-                        <span>Time</span>
-                    </th>
-                    <th>
-                        <span>System</span>
-                    </th>
-                    <th>
-                        <span>Talkgroup</span>
-                    </th>
-                    <th>
-                        <span>Name</span>
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let previousCall of callHistory"
-                    [ngClass]="{ 'replaying': previousCall?.id !== null && previousCall?.id === call?.id} ">
-                    <td>
-                        <span>{{ previousCall?.dateTime | date:timeFormat }}</span>
-                    </td>
-                    <td>
-                        <span>{{ previousCall?.systemData?.label || previousCall?.system}}</span>
-                    </td>
-                    <td>
-                        <span>{{ previousCall?.talkgroupData?.label || previousCall?.talkgroup }}</span>
-                    </td>
-                    <td>
-                        <span>{{ previousCall?.talkgroupData?.name || previousCall?.frequency }}</span>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+    <div class="dashboard__secondary">
+        <mat-card class="history mat-elevation-z4">
+            <mat-card-header>
+                <mat-card-title>Recent activity</mat-card-title>
+                <mat-card-subtitle>Automatically keeps the latest calls close at hand.</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+                <cdk-virtual-scroll-viewport *ngIf="callHistory.length; else emptyHistory"
+                    class="history__viewport" itemSize="68" minBufferPx="200" maxBufferPx="400">
+                    <div class="history__row mat-elevation-z1"
+                        *cdkVirtualFor="let previousCall of callHistory; trackBy: trackCall">
+                        <div class="history__time">
+                            <span class="history__date">{{ previousCall.dateTime | date:'MM/dd' }}</span>
+                            <span class="history__clock">{{ previousCall.dateTime | date:timeFormat }}</span>
+                        </div>
+                        <div class="history__system">
+                            <span>{{ previousCall.systemData?.label || previousCall.system }}</span>
+                        </div>
+                        <div class="history__talkgroup">
+                            <span>{{ previousCall.talkgroupData?.label || previousCall.talkgroup }}</span>
+                            <small>{{ previousCall.talkgroupData?.name || previousCall.frequency }}</small>
+                        </div>
+                        <div class="history__actions">
+                            <button mat-icon-button color="primary" aria-label="Replay call"
+                                (click)="playFromHistory(previousCall)">
+                                <mat-icon>play_arrow</mat-icon>
+                            </button>
+                        </div>
+                    </div>
+                </cdk-virtual-scroll-viewport>
+                <ng-template #emptyHistory>
+                    <div class="history__empty mat-elevation-z2">
+                        <mat-icon>history</mat-icon>
+                        <p>No calls captured yet. Scan CT keeps the most recent activity here.</p>
+                    </div>
+                </ng-template>
+            </mat-card-content>
+        </mat-card>
     </div>
-</div>
-<div class="rdio-control">
-    <div class="row">
-        <button class="rdio-button" (click)="livefeed()"
-            [ngClass]="{ off: livefeedOffline && !playbackMode, on: livefeedOnline, partial: playbackMode }">
-            LIVE<br>FEED
-        </button>
-        <div class="spacer"></div>
-        <button class="rdio-button" (click)="holdSystem()" [ngClass]="{ off: !holdSys, on: holdSys }">
-            HOLD<br>SYS
-        </button>
-        <div class="spacer"></div>
-        <button class="rdio-button" (click)="holdTalkgroup()" [ngClass]="{ off: !holdTg, on: holdTg }">
-            HOLD<br>TG
-        </button>
-    </div>
-    <div class="row">
-        <button class="rdio-button" (click)="replay()">
-            REPLAY<br>LAST
-        </button>
-        <div class="spacer"></div>
-        <button class="rdio-button" (click)="skip()">
-            SKIP<br>NEXT
-        </button>
-        <div class="spacer"></div>
-        <button class="rdio-button" (click)="avoid()">
-            AVOID
-        </button>
-    </div>
-    <div class="row">
-        <button class="rdio-button" (click)="showSearchPanel()">
-            SEARCH<br>CALL
-        </button>
-        <div class="spacer"></div>
-        <button class="rdio-button" (click)="pause()" [ngClass]="{ off: !livefeedPaused, on: livefeedPaused }">
-            PAUSE
-        </button>
-        <div class="spacer"></div>
-        <button class="rdio-button" (click)="showSelectPanel()">
-            SELECT<br>TG
-        </button>
-    </div>
-</div>
-<div class="rdio-help" *ngIf="email">
-    <button mat-icon-button (click)="showHelp()">
-        <mat-icon>help_center</mat-icon>
-    </button>
 </div>

@@ -5,10 +5,10 @@
 
 @include mat.core();
 
-$rdio-scanner-font-family: Roboto, "Helvetica Neue", sans-serif;
+$rdio-scanner-font-family: "Roboto", "Helvetica Neue", sans-serif;
 
-$rdio-scanner-primary: mat.define-palette(mat.$grey-palette, 800, 50);
-$rdio-scanner-accent: mat.define-palette(mat.$green-palette);
+$rdio-scanner-primary: mat.define-palette(mat.$indigo-palette, 700, 300, 900);
+$rdio-scanner-accent: mat.define-palette(mat.$cyan-palette, 500, 200, 700);
 $rdio-scanner-warn: mat.define-palette(mat.$red-palette);
 $rdio-scanner-typography: mat.define-typography-config(
 	$font-family: $rdio-scanner-font-family,
@@ -27,17 +27,12 @@ $rdio-scanner-theme: mat.define-light-theme(
 @include mat.all-component-themes($rdio-scanner-theme);
 @include mat.all-component-typographies($rdio-scanner-typography);
 
-body {
-	font-family: $rdio-scanner-font-family;
-	margin: 0;
-}
-
-body,
-html {
-	height: 100%;
-}
-
 html,
 body {
-	height: 100%;
+        height: 100%;
+        margin: 0;
+        font-family: $rdio-scanner-font-family;
+        background: radial-gradient(circle at 20% 20%, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.98)),
+                linear-gradient(135deg, rgba(15, 23, 42, 1) 0%, rgba(2, 6, 23, 1) 100%);
+        color: rgba(255, 255, 255, 0.87);
 }

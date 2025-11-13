@@ -1,65 +1,128 @@
-$background-color: rgb(30, 30, 30);
-
 :host {
-  background-color: $background-color;
-  color: rgb(255, 255, 255);
   display: block;
   height: 100%;
   min-width: 320px;
-  position: relative;
+  color: rgba(255, 255, 255, 0.94);
+}
 
-  .mat-sidenav {
-    background-color: inherit;
-    color: inherit;
-    width: 100%;
-  }
+.scanner-shell {
+  height: 100%;
+  background-color: transparent;
 
-  .mat-sidenav-container {
-    background-color: inherit;
-    color: inherit;
-    height: inherit;
-  }
-
-  .mat-sidenav-content {
-    align-items: center;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
+  .mat-drawer-container,
+  .mat-drawer-content,
+  .mat-drawer-inner-container {
+    background-color: transparent;
   }
 }
 
-.panel {
-  background-color: $background-color;
+.scanner-shell__content {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  gap: 24px;
+  min-height: 100%;
+  padding: 24px clamp(16px, 4vw, 48px) 48px;
+  box-sizing: border-box;
+}
 
-  &.search .mat-toolbar > div {
-    justify-content: flex-end;
+.scanner-toolbar {
+  border-radius: 18px;
+  padding: 0 clamp(8px, 1.5vw, 24px);
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto;
+  align-items: center;
+  gap: clamp(8px, 1.5vw, 18px);
+  backdrop-filter: blur(16px);
+  background: linear-gradient(135deg, rgba(63, 81, 181, 0.95), rgba(30, 64, 175, 0.92));
+
+  button.mat-mdc-icon-button {
+    color: rgba(255, 255, 255, 0.92);
+    transition: transform 120ms ease;
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+
+  .brand-title {
+    font-size: clamp(1.1rem, 2vw, 1.5rem);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
-  > div {
-    flex: 1;
-    height: 100%;
-    overflow: auto;
+  .brand-subtitle {
+    font-size: clamp(0.7rem, 1.2vw, 0.85rem);
+    opacity: 0.75;
+  }
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.scanner-main {
+  display: block;
+  width: min(1100px, 100%);
+  margin: 0 auto 32px;
+}
+
+.scanner-panel {
+  width: min(480px, 90vw);
+  color: rgba(15, 23, 42, 0.92);
+  background: linear-gradient(160deg, rgba(248, 250, 252, 0.96), rgba(226, 232, 240, 0.96));
+
+  .panel-title {
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
   }
 
   .mat-toolbar {
-    background-color: inherit;
-    box-shadow: 0 4px 8px rgba($background-color, 0.8);
-    color: currentColor;
-    z-index: 2;
-
-    > div {
-      display: flex;
-      flex-direction: row;
-    }
+    color: rgba(255, 255, 255, 0.94);
   }
 
-  > div > div,
-  .mat-toolbar > div {
-    margin: 0 auto;
-    max-width: 1200px;
+  .panel {
+    color: rgba(15, 23, 42, 0.92);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    > div {
+      flex: 1;
+      overflow: auto;
+      padding: 24px;
+    }
+  }
+}
+
+@media (max-width: 720px) {
+  .scanner-shell__content {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .scanner-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    padding: 8px 12px;
+  }
+
+  .scanner-toolbar .spacer {
+    display: none;
+  }
+
+  .brand {
     width: 100%;
+    align-items: center;
+    text-align: center;
   }
 }
