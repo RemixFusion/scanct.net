@@ -109,16 +109,56 @@ func (talkgroups *Talkgroups) FromMap(f []any) *Talkgroups {
 	talkgroups.mutex.Lock()
 	defer talkgroups.mutex.Unlock()
 
-	talkgroups.List = []*Talkgroup{}
+	existing := map[uint]*Talkgroup{}
+	for _, talkgroup := range talkgroups.List {
+		if talkgroup != nil {
+			existing[talkgroup.Id] = talkgroup
+		}
+	}
+
+	newList := []*Talkgroup{}
+	indexById := map[uint]int{}
 
 	for _, r := range f {
 		switch m := r.(type) {
 		case map[string]any:
 			talkgroup := &Talkgroup{}
 			talkgroup.FromMap(m)
-			talkgroups.List = append(talkgroups.List, talkgroup)
+
+			if prev, ok := existing[talkgroup.Id]; ok && prev != nil {
+				if talkgroup.Order == 0 {
+					talkgroup.Order = prev.Order
+				}
+				if talkgroup.GroupId == 0 {
+					talkgroup.GroupId = prev.GroupId
+				}
+				if talkgroup.TagId == 0 {
+					talkgroup.TagId = prev.TagId
+				}
+				if talkgroup.Frequency == nil {
+					talkgroup.Frequency = prev.Frequency
+				}
+				if talkgroup.Led == nil {
+					talkgroup.Led = prev.Led
+				}
+				if len(talkgroup.Name) == 0 {
+					talkgroup.Name = prev.Name
+				}
+				if len(talkgroup.Label) == 0 {
+					talkgroup.Label = prev.Label
+				}
+			}
+
+			if idx, ok := indexById[talkgroup.Id]; ok {
+				newList[idx] = talkgroup
+			} else {
+				indexById[talkgroup.Id] = len(newList)
+				newList = append(newList, talkgroup)
+			}
 		}
 	}
+
+	talkgroups.List = newList
 
 	return talkgroups
 }

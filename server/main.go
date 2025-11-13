@@ -70,8 +70,8 @@ func main() {
 		}
 	}
 
-	fmt.Printf("\nRdio Scanner v%s\n", Version)
-	fmt.Printf("----------------------------------\n")
+	fmt.Printf("\nScan CT v%s\n", Version)
+	fmt.Printf("---------------------\n")
 
 	if err := controller.Start(); err != nil {
 		log.Fatal(err)

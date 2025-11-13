@@ -58,9 +58,11 @@ type Config struct {
 func NewConfig() *Config {
 	const (
 		defaultAdminUrl   = "/admin"
-		defaultConfigFile = "rdio-scanner.ini"
+		defaultConfigFile = "scanct.ini"
+		legacyConfigFile  = "rdio-scanner.ini"
 		defaultDbType     = DbTypeSqlite
-		defaultDbFile     = "rdio-scanner.db"
+		defaultDbFile     = "scanct.db"
+		legacyDbFile      = "rdio-scanner.db"
 		defaultDbHost     = "localhost"
 		defaultDbPort     = uint(3306)
 		defaultListen     = ":3000"
@@ -79,7 +81,7 @@ func NewConfig() *Config {
 			config.BaseDir = filepath.Dir(exe)
 			if !config.isBaseDirWritable() {
 				if h, err := os.UserHomeDir(); err == nil {
-					config.BaseDir = filepath.Join(h, "Rdio Scanner")
+					config.BaseDir = filepath.Join(h, "Scan CT")
 					if _, err := os.Stat(config.BaseDir); os.IsNotExist(err) {
 						os.MkdirAll(config.BaseDir, 0770)
 					}
@@ -89,14 +91,14 @@ func NewConfig() *Config {
 	}
 
 	flag.StringVar(&config.BaseDir, "base_dir", config.BaseDir, "base directory where all data will be written")
-	flag.StringVar(&config.DbFile, "db_file", defaultDbFile, "sqlite database file")
+	flag.StringVar(&config.DbFile, "db_file", defaultDbFile, fmt.Sprintf("sqlite database file (legacy %s supported)", legacyDbFile))
 	flag.StringVar(&config.DbHost, "db_host", defaultDbHost, "database host ip or hostname")
 	flag.StringVar(&config.DbName, "db_name", "", "database name")
 	flag.StringVar(&config.DbPassword, "db_pass", "", "database password")
 	flag.UintVar(&config.DbPort, "db_port", defaultDbPort, "database host port")
 	flag.StringVar(&config.DbType, "db_type", defaultDbType, fmt.Sprintf("database type, one of %s, %s, %s", DbTypeSqlite, DbTypeMariadb, DbTypeMysql))
 	flag.StringVar(&config.DbUsername, "db_user", "", "database user name")
-	flag.StringVar(&config.ConfigFile, "config", defaultConfigFile, "server config file")
+	flag.StringVar(&config.ConfigFile, "config", defaultConfigFile, fmt.Sprintf("server config file (legacy %s supported)", legacyConfigFile))
 	flag.StringVar(&config.Listen, "listen", defaultListen, "listening address")
 	flag.StringVar(&config.newAdminPassword, "admin_password", "", "change admin password")
 	flag.StringVar(&config.SslAutoCert, "ssl_auto_cert", "", "domain name for Let's Encrypt automatic certificate")
@@ -104,6 +106,22 @@ func NewConfig() *Config {
 	flag.StringVar(&config.SslKeyFile, "ssl_key_file", "", "ssl PEM formated key")
 	flag.StringVar(&config.SslListen, "ssl_listen", "", "listening address for ssl")
 	flag.Parse()
+
+	if config.ConfigFile == defaultConfigFile {
+		if _, err := os.Stat(config.ConfigFile); os.IsNotExist(err) {
+			if _, errLegacy := os.Stat(legacyConfigFile); errLegacy == nil {
+				config.ConfigFile = legacyConfigFile
+			}
+		}
+	}
+
+	if config.DbFile == defaultDbFile {
+		if _, err := os.Stat(config.DbFile); os.IsNotExist(err) {
+			if _, errLegacy := os.Stat(legacyDbFile); errLegacy == nil {
+				config.DbFile = legacyDbFile
+			}
+		}
+	}
 
 	if !config.isBaseDirWritable() {
 		log.Fatalf("no write permissions in %s", config.BaseDir)

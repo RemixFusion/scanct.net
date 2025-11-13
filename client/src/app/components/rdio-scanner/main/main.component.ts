@@ -69,12 +69,12 @@ export class RdioScannerMainComponent implements OnDestroy, OnInit {
     // BEGIN OF RED TAPE:
     //
     // By modifying, deleting or disabling the following lines, you harm
-    // the open source project and its author.  Rdio Scanner represents a lot of
+    // the open source project and its author.  Scan CT is powered by Rdio Scanner and represents a lot of
     // investment in time, support, testing and hardware.
     //
     // Be respectful, sponsor the project if you can, use native apps when possible.
     //
-    callTalkgroupName = `Rdio Scanner v${packageInfo.version}`;
+    callTalkgroupName = `Scan CT v${packageInfo.version}`;
     //
     // END OF RED TAPE.
     //
