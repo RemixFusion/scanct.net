@@ -5,39 +5,434 @@
 
 @include mat.core();
 
-$rdio-scanner-font-family: Roboto, "Helvetica Neue", sans-serif;
+$scanct-font-family: 'Roboto', 'Helvetica Neue', sans-serif;
 
-$rdio-scanner-primary: mat.define-palette(mat.$grey-palette, 800, 50);
-$rdio-scanner-accent: mat.define-palette(mat.$green-palette);
-$rdio-scanner-warn: mat.define-palette(mat.$red-palette);
-$rdio-scanner-typography: mat.define-typography-config(
-	$font-family: $rdio-scanner-font-family,
+$scanct-primary: mat.define-palette(mat.$blue-palette, 800, 100, 900);
+$scanct-accent: mat.define-palette(mat.$light-green-palette, 500, 100, 700);
+$scanct-warn: mat.define-palette(mat.$red-palette);
+
+$scanct-typography: mat.define-typography-config(
+        $font-family: $scanct-font-family,
 );
 
-$rdio-scanner-theme: mat.define-light-theme(
-	(
-		color: (
-			primary: $rdio-scanner-primary,
-			accent: $rdio-scanner-accent,
-			warn: $rdio-scanner-warn,
-		),
-	)
+$scanct-theme: mat.define-light-theme(
+        (
+                color: (
+                        primary: $scanct-primary,
+                        accent: $scanct-accent,
+                        warn: $scanct-warn,
+                ),
+                typography: $scanct-typography,
+        )
 );
 
-@include mat.all-component-themes($rdio-scanner-theme);
-@include mat.all-component-typographies($rdio-scanner-typography);
-
-body {
-	font-family: $rdio-scanner-font-family;
-	margin: 0;
-}
-
-body,
-html {
-	height: 100%;
-}
+@include mat.all-component-themes($scanct-theme);
+@include mat.all-component-typographies($scanct-typography);
 
 html,
 body {
-	height: 100%;
+        height: 100%;
+}
+
+body {
+        background: radial-gradient(circle at top, rgba(5, 53, 94, 0.92), rgba(3, 26, 46, 0.96));
+        color: rgba(19, 28, 35, 0.87);
+        font-family: $scanct-font-family;
+        margin: 0;
+        min-height: 100%;
+}
+
+.scanct-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        margin: 0 auto;
+        max-width: 1080px;
+}
+
+.scanct-header {
+        align-items: center;
+        background: linear-gradient(135deg, rgba(11, 31, 51, 0.92), rgba(21, 101, 192, 0.85));
+        border-radius: 18px;
+        color: rgba(255, 255, 255, 0.92);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        justify-content: space-between;
+        padding: 24px;
+
+        .brand {
+                max-width: min(100%, 420px);
+
+                h1 {
+                        font-size: clamp(1.8rem, 1.6rem + 0.5vw, 2.4rem);
+                        margin: 0;
+                        letter-spacing: 0.04em;
+                }
+
+                p {
+                        margin: 4px 0 0;
+                        opacity: 0.8;
+                        font-weight: 300;
+                        letter-spacing: 0.05em;
+                        text-transform: uppercase;
+                }
+        }
+
+        .status {
+                align-items: center;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+
+                .status-chip {
+                        align-items: center;
+                        background: rgba(255, 255, 255, 0.12);
+                        border-radius: 999px;
+                        display: inline-flex;
+                        gap: 10px;
+                        padding: 6px 16px;
+                        text-transform: uppercase;
+                        font-size: 0.85rem;
+                        letter-spacing: 0.08em;
+
+                        &.online {
+                                background: rgba(76, 175, 80, 0.18);
+                        }
+
+                        &.playback {
+                                background: rgba(255, 193, 7, 0.18);
+                        }
+
+                        &.offline {
+                                background: rgba(255, 255, 255, 0.08);
+                        }
+                }
+
+                .status-indicator {
+                        background: rgba(255, 255, 255, 0.4);
+                        border-radius: 50%;
+                        display: inline-flex;
+                        height: 12px;
+                        width: 12px;
+                        box-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
+
+                        &.on {
+                                background: #4caf50;
+                                box-shadow: 0 0 8px rgba(76, 175, 80, 0.9);
+                        }
+
+                        &.paused {
+                                animation: pulse 1.5s ease-in-out infinite;
+                        }
+
+                        &.off {
+                                background: rgba(255, 255, 255, 0.3);
+                                box-shadow: none;
+                        }
+
+                        &.blue {
+                                background: #2979ff;
+                                box-shadow: 0 0 8px rgba(41, 121, 255, 0.8);
+                        }
+
+                        &.cyan {
+                                background: #00bcd4;
+                                box-shadow: 0 0 8px rgba(0, 188, 212, 0.8);
+                        }
+
+                        &.green {
+                                background: #4caf50;
+                        }
+
+                        &.magenta {
+                                background: #d500f9;
+                        }
+
+                        &.orange {
+                                background: #ff9100;
+                        }
+
+                        &.red {
+                                background: #ff1744;
+                        }
+
+                        &.white {
+                                background: #fafafa;
+                                box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+                        }
+
+                        &.yellow {
+                                background: #ffeb3b;
+                                box-shadow: 0 0 8px rgba(255, 235, 59, 0.8);
+                        }
+                }
+
+                .status-meta {
+                        align-items: center;
+                        background: rgba(255, 255, 255, 0.08);
+                        border-radius: 12px;
+                        display: inline-flex;
+                        gap: 6px;
+                        padding: 6px 12px;
+                        font-weight: 500;
+
+                        mat-icon {
+                                font-size: 18px;
+                                height: 18px;
+                                width: 18px;
+                        }
+                }
+        }
+}
+
+.scanct-content {
+        display: grid;
+        gap: 24px;
+}
+
+.call-card {
+        background: rgba(255, 255, 255, 0.96);
+        border-radius: 20px;
+        color: #0f2133;
+        overflow: hidden;
+        position: relative;
+
+        &.dimmed {
+                filter: grayscale(0.1) brightness(0.92);
+        }
+
+        &__header,
+        &__metrics,
+        &__signal,
+        &__flags {
+                display: flex;
+        }
+
+        &__header {
+                align-items: center;
+                justify-content: space-between;
+                padding: 16px 16px 8px;
+
+                .system-name {
+                        font-size: 1.05rem;
+                        font-weight: 600;
+                        text-transform: uppercase;
+                        letter-spacing: 0.08em;
+                }
+
+                .system-tag {
+                        background: rgba(21, 101, 192, 0.12);
+                        border-radius: 999px;
+                        color: #155cc0;
+                        font-size: 0.75rem;
+                        letter-spacing: 0.08em;
+                        margin-left: 8px;
+                        padding: 2px 10px;
+                        text-transform: uppercase;
+                }
+
+                .system-type {
+                        background: rgba(15, 33, 51, 0.08);
+                        border-radius: 999px;
+                        color: rgba(15, 33, 51, 0.72);
+                        font-size: 0.75rem;
+                        letter-spacing: 0.06em;
+                        margin-left: 8px;
+                        padding: 2px 10px;
+                        text-transform: uppercase;
+                }
+
+                .call-card__time {
+                        align-items: flex-end;
+                        display: flex;
+                        flex-direction: column;
+                        font-size: 0.85rem;
+                        gap: 2px;
+                        text-align: right;
+                        color: rgba(0, 0, 0, 0.54);
+                }
+        }
+
+        &__title {
+                font-size: clamp(1.6rem, 1.2rem + 1vw, 2.2rem);
+                font-weight: 700;
+                letter-spacing: 0.02em;
+                padding: 0 16px;
+        }
+
+        &__subtitle {
+                color: rgba(0, 0, 0, 0.54);
+                font-size: 0.95rem;
+                padding: 0 16px 12px;
+        }
+
+        &__metrics,
+        &__signal {
+                align-items: center;
+                gap: 12px;
+                padding: 0 16px;
+
+                > div {
+                        align-items: center;
+                        background: rgba(21, 101, 192, 0.08);
+                        border-radius: 14px;
+                        color: #0f2133;
+                        display: inline-flex;
+                        gap: 8px;
+                        padding: 8px 12px;
+
+                        mat-icon {
+                                color: #155cc0;
+                        }
+                }
+        }
+
+        &__signal {
+                margin-top: 12px;
+
+                > div {
+                        background: rgba(6, 64, 109, 0.08);
+
+                        mat-icon {
+                                color: #063f6d;
+                        }
+                }
+        }
+
+        &__flags {
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 16px;
+
+                .flag {
+                        background: rgba(15, 33, 51, 0.06);
+                        border-radius: 999px;
+                        color: rgba(15, 33, 51, 0.7);
+                        font-size: 0.75rem;
+                        letter-spacing: 0.08em;
+                        padding: 4px 12px;
+                        text-transform: uppercase;
+
+                        &.active {
+                                background: rgba(21, 101, 192, 0.16);
+                                color: #0f2133;
+                                font-weight: 600;
+                        }
+                }
+        }
+
+        &__auth {
+                background: linear-gradient(135deg, rgba(12, 56, 97, 0.92), rgba(4, 28, 50, 0.92));
+                border-radius: 18px;
+                inset: 0;
+                padding: 24px;
+                position: absolute;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                form {
+                        width: min(320px, 100%);
+                }
+        }
+}
+
+.history-card {
+        .mat-mdc-card-header {
+                padding-bottom: 8px;
+        }
+
+        mat-list-item {
+                border-radius: 12px;
+                margin: 4px 0;
+
+                &.replaying {
+                        background: rgba(21, 101, 192, 0.12);
+                        font-weight: 600;
+                }
+
+                .call-meta {
+                        display: flex;
+                        gap: 12px;
+                        font-size: 0.75rem;
+                        color: rgba(0, 0, 0, 0.54);
+                }
+        }
+}
+
+.control-card {
+        .mat-mdc-card-header {
+                padding-bottom: 12px;
+        }
+
+        &__grid {
+                display: grid;
+                gap: 12px;
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                padding: 12px;
+        }
+
+        .state-button {
+                align-items: center;
+                border-radius: 14px;
+                display: inline-flex;
+                font-weight: 600;
+                gap: 8px;
+                justify-content: center;
+                padding: 12px 16px;
+                text-transform: none;
+
+                &.active {
+                        background: rgba(21, 101, 192, 0.16);
+                        color: #0f2133;
+                }
+
+                &.standby {
+                        background: rgba(255, 193, 7, 0.16);
+                        color: #8d6e00;
+                }
+
+                mat-icon {
+                        color: inherit;
+                }
+        }
+}
+
+.scanct-help {
+        bottom: 32px;
+        position: fixed;
+        right: 32px;
+        z-index: 5;
+}
+
+@keyframes pulse {
+        0%,
+        100% {
+                box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+        }
+
+        50% {
+                box-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
+        }
+}
+
+@media (max-width: 768px) {
+        .scanct-shell {
+                gap: 16px;
+        }
+
+        .scanct-header {
+                padding: 20px;
+        }
+
+        .call-card__metrics,
+        .call-card__signal {
+                flex-direction: column;
+                align-items: flex-start;
+        }
+
+        .control-card__grid {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        }
 }

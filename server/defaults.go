@@ -51,11 +51,12 @@ type DefaultDownstream struct {
 }
 
 type DefaultOptions struct {
-	autoPopulate                bool
-	audioConversion             uint
-	dimmerDelay                 uint
-	disableDuplicateDetection   bool
-	duplicateDetectionTimeFrame uint
+        autoPopulate                bool
+        audioConversion             uint
+        branding                    string
+        dimmerDelay                 uint
+        disableDuplicateDetection   bool
+        duplicateDetectionTimeFrame uint
 	keypadBeeps                 string
 	maxClients                  uint
 	playbackGoesLive            bool
@@ -94,10 +95,11 @@ var defaults Defaults = Defaults{
 		"Unknown",
 	},
 	keypadBeeps: "uniden",
-	options: DefaultOptions{
-		audioConversion:             AUDIO_CONVERSION_ENABLED,
-		autoPopulate:                true,
-		dimmerDelay:                 5000,
+        options: DefaultOptions{
+                audioConversion:             AUDIO_CONVERSION_ENABLED,
+                autoPopulate:                true,
+                branding:                    "Scan CT",
+                dimmerDelay:                 5000,
 		disableDuplicateDetection:   false,
 		duplicateDetectionTimeFrame: 500,
 		keypadBeeps:                 "uniden",

@@ -1,8 +1,8 @@
-$background-color: rgb(30, 30, 30);
+$background-color: rgba(6, 23, 40, 0.96);
 
 :host {
   background-color: $background-color;
-  color: rgb(255, 255, 255);
+  color: rgba(255, 255, 255, 0.9);
   display: block;
   height: 100%;
   min-width: 320px;
@@ -45,8 +45,8 @@ $background-color: rgb(30, 30, 30);
   }
 
   .mat-toolbar {
-    background-color: inherit;
-    box-shadow: 0 4px 8px rgba($background-color, 0.8);
+    background: linear-gradient(135deg, rgba(6, 31, 54, 0.95), rgba(21, 101, 192, 0.55));
+    box-shadow: 0 4px 12px rgba($background-color, 0.8);
     color: currentColor;
     z-index: 2;
 

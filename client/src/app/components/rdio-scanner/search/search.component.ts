@@ -20,7 +20,6 @@
 import { ChangeDetectorRef, Component, OnDestroy, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { MatPaginator } from '@angular/material/paginator';
-import { BehaviorSubject } from 'rxjs';
 import {
     RdioScannerCall,
     RdioScannerConfig,
@@ -56,7 +55,9 @@ export class RdioScannerSearchComponent implements OnDestroy {
 
     paused = false;
 
-    results = new BehaviorSubject(new Array<RdioScannerCall | null>(10));
+    pageSize = 25;
+
+    results: Array<RdioScannerCall | null> = [];
     resultsPending = false;
 
     time12h = false;
@@ -95,6 +96,8 @@ export class RdioScannerSearchComponent implements OnDestroy {
         });
 
         this.eventSubscription = this.rdioScannerService.event.subscribe((event: RdioScannerEvent) => this.eventHandler(event));
+
+        this.results = Array.from({ length: this.pageSize }, () => null);
     }
 
     download(id: number): void {
@@ -196,21 +199,27 @@ export class RdioScannerSearchComponent implements OnDestroy {
             return;
         }
 
-        const from = this.paginator.pageIndex * this.paginator.pageSize;
+        const currentPageSize = this.paginator.pageSize || this.pageSize;
 
-        const to = this.paginator.pageIndex * this.paginator.pageSize + this.paginator.pageSize - 1;
+        this.pageSize = currentPageSize;
+
+        const from = this.paginator.pageIndex * currentPageSize;
 
         if (!this.callPending && (from >= this.offset + this.limit || from < this.offset)) {
             this.searchCalls();
+            return;
+        }
 
-        } else if (this.playbackList) {
-            const calls: Array<RdioScannerCall | null> = this.playbackList.results.slice(from % this.limit, to % this.limit + 1);
+        if (this.playbackList) {
+            const start = Math.max(0, from - this.offset);
+            const calls: Array<RdioScannerCall | null> = this.playbackList.results.slice(start, start + this.pageSize);
 
-            while (calls.length < this.results.value.length) {
+            while (calls.length < this.pageSize) {
                 calls.push(null);
             }
 
-            this.results.next(calls);
+            this.results = calls;
+            this.ngChangeDetectorRef.detectChanges();
         }
     }
 
@@ -237,7 +246,7 @@ export class RdioScannerSearchComponent implements OnDestroy {
 
         const pageIndex = this.paginator?.pageIndex || 0;
 
-        const pageSize = this.paginator?.pageSize || 0;
+        const pageSize = this.paginator?.pageSize || this.pageSize;
 
         this.offset = Math.floor((pageIndex * pageSize) / this.limit) * this.limit;
 
@@ -284,6 +293,7 @@ export class RdioScannerSearchComponent implements OnDestroy {
         }
 
         this.resultsPending = true;
+        this.results = Array.from({ length: this.pageSize }, () => null);
 
         this.form.disable();
 
@@ -304,7 +314,7 @@ export class RdioScannerSearchComponent implements OnDestroy {
             this.call = event.call;
 
             if (this.callPending) {
-                const index = this.results.value.findIndex((call) => call?.id === this.callPending);
+                const index = this.results.findIndex((call) => call?.id === this.callPending);
 
                 if (index === -1) {
                     if (this.form.get('sort')?.value === -1) {

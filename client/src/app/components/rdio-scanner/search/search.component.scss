@@ -1,157 +1,128 @@
 :host {
   box-sizing: border-box;
   display: block;
-  padding: 8px;
+  padding: 16px;
   user-select: none;
 }
 
-.rdio-filters,
-.rdio-list {
-  padding: 1rem;
-}
-
-.rdio-filters form {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-
-  .mat-mdc-form-field {
-    @for $i from 1 through 7 {
-      &:nth-of-type(#{$i}) {
-        order: #{$i};
-      }
-    }
-  }
-
-  .reset {
-    display: flex;
-    flex: 100%;
-    flex-direction: row;
-    justify-content: flex-end;
-    order: 7;
-  }
-}
-
-.rdio-list {
-  border-radius: 4px;
-  margin-bottom: 16px;
+.search-card,
+.filter-card {
+  border-radius: 18px;
+  margin-bottom: 20px;
   overflow: hidden;
-  padding: 0;
+}
 
-  .mat-mdc-cell,
-  .mat-mdc-header-cell {
-    &:first-of-type {
-      padding-left: 0;
-    }
+.search-table {
+  width: 100%;
 
-    &:last-of-type {
-      padding-right: 8px;
-    }
+  .mat-mdc-header-row {
+    background: rgba(15, 33, 51, 0.06);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
 
-    &:nth-child(1) {
-      flex: 0 0 48px;
-    }
+  .mat-mdc-header-cell,
+  .mat-mdc-cell {
+    padding: 12px 16px;
+  }
 
-    &:nth-child(2) {
-      flex: 0 0 55px;
-    }
+  .mat-mdc-cell {
+    font-size: 0.9rem;
+    color: rgba(15, 33, 51, 0.87);
 
-    &:nth-child(3):not(.time12h) {
-      flex: 0 0 53px;
-    }
-
-    &:nth-child(3).time12h {
-      flex: 0 0 78px;
-    }
-
-    &:nth-child(4),
-    &:nth-child(5) {
-      flex: 0 0 20%;
-    }
-
-    > span {
+    span {
+      display: inline-block;
+      max-width: 100%;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
   }
 
-  .mdc-data-table__header-cell,
-  .mdc-data-table__cell {
-    padding: 0 8px;
+  .placeholder-row {
+    opacity: 0.45;
+
+    .mat-mdc-cell {
+      color: rgba(15, 33, 51, 0.4);
+    }
   }
 
-  .paginator {
+  .time12h span {
+    min-width: 88px;
+    text-align: center;
+  }
+}
+
+.placeholder-dot {
+  background: rgba(15, 33, 51, 0.2);
+  border-radius: 50%;
+  display: inline-flex;
+  height: 8px;
+  width: 8px;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+.search-progress {
+  margin-top: 4px;
+}
+
+.search-footer {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin-top: 16px;
+
+  mat-slide-toggle {
     align-items: center;
+    display: inline-flex;
+    gap: 6px;
+    font-weight: 600;
+
+    mat-icon {
+      font-size: 18px;
+      height: 18px;
+      width: 18px;
+    }
+  }
+}
+
+.filter-card form {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+
+  .filter-actions {
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    padding-left: 8px;
-  }
-
-  .spin {
-    animation-duration: 1000ms;
-    animation-iteration-count: infinite;
-    animation-name: spin;
-    animation-timing-function: linear;
-
-    @keyframes spin {
-      from {
-        transform: rotate(0deg);
-      }
-
-      to {
-        transform: rotate(-360deg);
-      }
-    }
+    justify-content: flex-end;
+    grid-column: 1 / -1;
   }
 }
 
-@media (max-width: 459px) {
-  .rdio-filters form .mat-mdc-form-field {
-    flex: 100%;
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(-360deg);
   }
 }
 
-@media (min-width: 460px) {
-  .rdio-list .mat-mdc-slide-toggle .mat-icon {
-    padding: 0 16px 0 4px;
+@media (max-width: 720px) {
+  :host {
+    padding: 12px;
   }
-}
 
-@media (min-width: 460px) and (max-width: 979px) {
-  .rdio-filters form .mat-mdc-form-field {
-    flex: calc(50% - 1em);
+  .search-footer {
+    justify-content: center;
 
-    &:nth-of-type(2),
-    &:nth-of-type(4),
-    &:nth-of-type(6) {
-      margin-left: 1em;
-    }
-  }
-}
-
-@media (min-width: 980px) {
-  .rdio-filters form .mat-mdc-form-field {
-    flex: calc(100% / 3 - 2em);
-
-    &:nth-of-type(2),
-    &:nth-of-type(4),
-    &:nth-of-type(5),
-    &:nth-of-type(6) {
-      margin-left: 1em;
-    }
-
-    &:nth-of-type(3) {
-      order: 4;
-    }
-
-    &:nth-of-type(4) {
-      order: 5;
-    }
-
-    &:nth-of-type(5) {
-      order: 3;
+    mat-paginator {
+      width: 100%;
     }
   }
 }

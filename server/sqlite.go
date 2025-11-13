@@ -60,7 +60,7 @@ var SqliteSchema = []string{
     "order" integer NOT NULL DEFAULT 0
   );`,
 
-	`CREATE TABLE IF NOT EXISTS "systems" (
+        `CREATE TABLE IF NOT EXISTS "systems" (
     "systemId" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
     "alert" text NOT NULL DEFAULT '',
     "autoPopulate" integer(1) NOT NULL DEFAULT 0,
@@ -98,6 +98,9 @@ var SqliteSchema = []string{
     FOREIGN KEY ("systemId") REFERENCES "systems" ("systemId") ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY ("tagId") REFERENCES "tags" ("tagId") ON DELETE CASCADE ON UPDATE CASCADE
   );`,
+
+        `CREATE INDEX IF NOT EXISTS "systems_ref_idx" ON "systems" ("systemRef");`,
+        `CREATE INDEX IF NOT EXISTS "talkgroups_ref_idx" ON "talkgroups" ("talkgroupRef");`,
 
 	`CREATE TABLE IF NOT EXISTS "talkgroupGroups" (
     "talkgroupGroupId" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -149,12 +152,14 @@ var SqliteSchema = []string{
     FOREIGN KEY ("callId") REFERENCES "calls" ("callId") ON DELETE CASCADE ON UPDATE CASCADE
   );`,
 
-	`CREATE TABLE IF NOT EXISTS "delayed" (
+        `CREATE TABLE IF NOT EXISTS "delayed" (
     "delayedId" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
     "callId" integer NOT NULL,
     "timestamp" integer NOT NULL,
     FOREIGN KEY ("callId") REFERENCES "calls" ("callId") ON DELETE CASCADE ON UPDATE CASCADE
   );`,
+
+        `CREATE INDEX IF NOT EXISTS "delayed_call_idx" ON "delayed" ("callId");`,
 
 	`CREATE TABLE IF NOT EXISTS "dirwatches" (
     "dirwatchId" integer NOT NULL PRIMARY KEY AUTOINCREMENT,

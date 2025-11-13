@@ -82,7 +82,7 @@ var PostgresqlSchema = []string{
     CONSTRAINT "sites_systemId" FOREIGN KEY ("systemId") REFERENCES "systems" ("systemId") ON DELETE CASCADE ON UPDATE CASCADE
   );`,
 
-	`CREATE TABLE IF NOT EXISTS "talkgroups" (
+        `CREATE TABLE IF NOT EXISTS "talkgroups" (
     "talkgroupId" bigserial NOT NULL PRIMARY KEY,
     "alert" text NOT NULL DEFAULT '',
     "delay" integer NOT NULL DEFAULT 0,
@@ -98,6 +98,9 @@ var PostgresqlSchema = []string{
     CONSTRAINT "talkgroups_systemId_fkey" FOREIGN KEY ("systemId") REFERENCES "systems" ("systemId") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "talkgroups_tagId_fkey" FOREIGN KEY ("tagId") REFERENCES "tags" ("tagId") ON DELETE CASCADE ON UPDATE CASCADE
   );`,
+
+        `CREATE INDEX IF NOT EXISTS "systems_ref_idx" ON "systems" ("systemRef");`,
+        `CREATE INDEX IF NOT EXISTS "talkgroups_ref_idx" ON "talkgroups" ("talkgroupRef");`,
 
 	`CREATE TABLE IF NOT EXISTS "talkgroupGroups" (
     "talkgroupGroupId" bigserial NOT NULL PRIMARY KEY,
@@ -149,12 +152,14 @@ var PostgresqlSchema = []string{
     CONSTRAINT "callUnits_callId" FOREIGN KEY ("callId") REFERENCES "calls" ("callId") ON DELETE CASCADE ON UPDATE CASCADE
   );`,
 
-	`CREATE TABLE IF NOT EXISTS "delayed" (
+        `CREATE TABLE IF NOT EXISTS "delayed" (
     "delayedId" bigserial NOT NULL PRIMARY KEY,
     "callId" bigint NOT NULL,
     "timestamp" bigint NOT NULL,
     CONSTRAINT "delayed_callId" FOREIGN KEY ("callId") REFERENCES "calls" ("callId") ON DELETE CASCADE ON UPDATE CASCADE
   );`,
+
+        `CREATE INDEX IF NOT EXISTS "delayed_call_idx" ON "delayed" ("callId");`,
 
 	`CREATE TABLE IF NOT EXISTS "dirwatches" (
     "dirwatchId" bigserial NOT NULL PRIMARY KEY,

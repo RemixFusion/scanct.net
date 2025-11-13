@@ -51,12 +51,12 @@ func NewDaemon() *Daemon {
 		Interface: &DaemonInterface{Process: p},
 	}
 
-	d.Config = service.Config{
-		Name:        name,
-		DisplayName: "Rdio Scanner",
-		Description: "The perfect software-defined radio companion",
-		Arguments:   []string{"-service", "run"},
-	}
+        d.Config = service.Config{
+                Name:        name,
+                DisplayName: "Scan CT",
+                Description: "Connecticut's Trunk Recorder companion",
+                Arguments:   []string{"-service", "run"},
+        }
 
 	if d.Service, err = service.New(d.Interface, &d.Config); err != nil {
 		log.Fatal(err)
